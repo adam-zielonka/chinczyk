@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chińczyk</title>
+    <style>
+    #canvas {
+        border-style: solid;
+    }
+    </style>
+    <script>
+      var game = {}
+
+      game.board = [
+        [3,3, , ,0,0,4, , ,4,4,],
+        [3,3, , ,0,4,0, , ,4,4,],
+        [ , , , ,0,4,0, , , , ,],
+        [ , , , ,0,4,0, , , , ,],
+        [3,0,0,0,0,4,0,0,0,0,0,],
+        [0,3,3,3,3, ,1,1,1,1,0,],
+        [0,0,0,0,0,2,0,0,0,0,1,],
+        [ , , , ,0,2,0, , , , ,],
+        [ , , , ,0,2,0, , , , ,],
+        [2,2, , ,0,2,0, , ,1,1,],
+        [2,2, , ,2,0,0, , ,1,1,]
+      ]
+
+      game.init = (canvasId, width, height) => {
+        game.canvasElement = document.getElementById(canvasId)
+        game.context = game.canvasElement.getContext('2d')
+        game.canvas = game.context.canvas
+        game.canvas.width = width
+        game.canvas.height = height
+        game.point = canvas.width/11
+        game.radius = game.point/2 - game.point/10
+        game.drawBoard()
+      }
+
+      game.drawField = (i, j) => {
+        var x = game.point/2 + game.point*i
+        var y = game.point/2 + game.point*j
+        game.context.beginPath()
+        game.context.arc(x, y, game.radius, 0, 2 * Math.PI, false)
+        game.context.fillStyle = game.getColor(game.board[j][i])
+        game.context.fill()
+      }
+
+      game.getColor = (id, shade) => {
+        switch (id) {
+          case 0: //Grey
+            switch (shade) {
+              default: return '#EEEEEE' //200
+            }
+          case 1: //Green
+            switch (shade) {
+              case 1: return '#388E3C' //700
+              default: return '#C8E6C9' //100
+            }
+          case 2: //Yellow
+            switch (shade) {
+              case 1: return '#FBC02D' //700
+              default: return '#FFF9C4' //100
+            }
+          case 3: //Red
+            switch (shade) {
+              case 1: return '#D32F2F' //700
+              default: return '#FFCDD2' //100
+            }
+          case 4: //Blue
+            switch (shade) {
+              case 1: return '#1565C0' //700
+              default: return '#BBDEFB' //100
+            }
+          default:
+            switch (shade) {
+              default: return 'white'
+            }
+        }
+      }
+
+      game.drawBoard = () => {
+        for (var i = 0; i < 11; i++)
+          for (var j = 0; j < 11; j++)
+            game.drawField(i, j)
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="canvas">
+        Use a Modern Web Browser
+    </canvas>
+    <script>
+      game.init('canvas', 800, 800)
+    </script>
+  </body>
+</html>
