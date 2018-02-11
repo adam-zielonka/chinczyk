@@ -12,7 +12,9 @@
     <script>
       var game = {}
 
-      game.board = [
+      game.board = {}
+
+      game.board.filds = [
         [3,3, , ,0,0,4, , ,4,4,],
         [3,3, , ,0,4,0, , ,4,4,],
         [ , , , ,0,4,0, , , , ,],
@@ -26,8 +28,23 @@
         [2,2, , ,2,0,0, , ,1,1,]
       ]
 
+      game.board.players = [
+        [0,0, , ,0,0,0, , ,0,0,],
+        [0,0, , ,0,0,0, , ,0,0,],
+        [ , , , ,0,0,0, , , , ,],
+        [ , , , ,0,0,0, , , , ,],
+        [0,0,0,0,0,0,0,0,0,0,0,],
+        [0,0,0,0,0, ,0,0,0,0,0,],
+        [0,0,0,0,0,0,0,0,0,0,0,],
+        [ , , , ,0,0,0, , , , ,],
+        [ , , , ,0,0,0, , , , ,],
+        [0,0, , ,0,0,0, , ,0,0,],
+        [0,0, , ,0,0,0, , ,0,0,]
+      ]
+
       game.init = (canvasId, width, height) => {
         game.canvasElement = document.getElementById(canvasId)
+        game.canvasElement.addEventListener('click', game.onClick, false)
         game.context = game.canvasElement.getContext('2d')
         game.canvas = game.context.canvas
         game.canvas.width = width
@@ -37,13 +54,26 @@
         game.drawBoard()
       }
 
-      game.drawField = (i, j) => {
-        var x = game.point/2 + game.point*i
-        var y = game.point/2 + game.point*j
-        game.context.beginPath()
-        game.context.arc(x, y, game.radius, 0, 2 * Math.PI, false)
-        game.context.fillStyle = game.getColor(game.board[j][i])
-        game.context.fill()
+      game.onClick = (event) => {
+        var x = event.pageX - game.canvasElement.offsetLeft
+        var y = event.pageY - game.canvasElement.offsetTop
+        var i = Math.floor(x/game.point)
+        var j = Math.floor(y/game.point)
+        if(++game.board.players[j][i] > 4) game.board.players[j][i] = 0
+        game.drawBoard()
+      }
+
+      game.drawField = (i, j, shade) => {
+        if(game.board.filds[j][i] != undefined) {
+          var x = game.point/2 + game.point*i
+          var y = game.point/2 + game.point*j
+          game.context.beginPath()
+          game.context.arc(x, y, game.radius, 0, 2 * Math.PI, false)
+          game.context.fillStyle = game.board.players[j][i] == 0
+                                 ? game.getColor(game.board.filds[j][i])
+                                 : game.getColor(game.board.players[j][i], 1)
+          game.context.fill()
+        }
       }
 
       game.getColor = (id, shade) => {
@@ -80,9 +110,45 @@
       }
 
       game.drawBoard = () => {
+        game.context.fillStyle = game.getColor()
+        game.context.fillRect(0, 0, game.canvas.width, game.canvas.height)
         for (var i = 0; i < 11; i++)
           for (var j = 0; j < 11; j++)
             game.drawField(i, j)
+      }
+
+      game.filds = []
+
+      game.filds[1] = {
+        home: [[9,5],[8,5],[7,5],[6,5]],
+        board: [[10,6],[9,6],[8,6],[7,6],[6,6],[6,7],[6,8],[6,9],[6,10],[5,10]],
+        start: [[9,9],[10,9],[9,10],[10,10]],
+        order: [1,2,3,4]
+      }
+
+      game.filds[2] = {
+        home: [[5,9],[5,8],[5,7],[5,6]],
+        board: [[4,10],[4,9],[4,8],[4,7],[4,6],[3,6],[2,6],[1,6],[0,6],[0,5]],
+        start: [[0,9],[1,9],[0,10],[1,10]],
+        order: [2,3,4,1]
+      }
+
+      game.filds[3] = {
+        home: [[1,5],[2,5],[3,5],[4,5]],
+        board: [[0,4],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[4,0],[5,0]],
+        start: [[0,0],[1,0],[0,1],[1,1]],
+        order: [3,4,1,2]
+      }
+
+      game.filds[4] = {
+        home: [[5,1],[5,2],[5,3],[5,4]],
+        board: [[6,0],[6,1],[6,2],[6,3],[6,4],[7,4],[8,4],[9,4],[10,4],[10,5]],
+        start: [[9,0],[10,0],[9,1],[10,1]],
+        order: [4,1,2,3]
+      }
+
+      game.getRandom = (min, max) => {
+        return Math.floor(Math.random() * (max - min + 1)) + min
       }
     </script>
   </head>
