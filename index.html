@@ -65,7 +65,8 @@
         var y = event.pageY - game.canvasElement.offsetTop
         var i = Math.floor(x/game.point)
         var j = Math.floor(y/game.point)
-        if(++game.board.players[j][i] > 4) game.board.players[j][i] = 0
+        // if(++game.board.players[j][i] > 4) game.board.players[j][i] = 0
+        game.move(j, i)
         game.drawBoard()
       }
 
@@ -154,7 +155,12 @@
       }
 
       game.player = 1
-      game.players = [,[[9,9],[10,9],[9,10],[10,10]],[[0,9],[1,9],[0,10],[1,10]],[[0,0],[1,0],[0,1],[1,1]],[[9,0],[10,0],[9,1],[10,1]]]
+      game.players = [,
+        [[9,9],[10,9],[9,10],[10,10]],
+        [[0,9],[1,9],[0,10],[1,10]],
+        [[0,0],[1,0],[0,1],[1,1]],
+        [[9,0],[10,0],[9,1],[10,1]]
+      ]
 
       game.setPlayers = () => {
         game.board.clear()
@@ -171,7 +177,7 @@
 
       game.dice = {}
 
-      game.dice.last = 6
+      game.dice.last = 5
 
       game.dice.throw = () => {
         game.dice.last = game.getRandom(1, 6)
@@ -194,10 +200,46 @@
       }
 
       game.start = () => {
-        game.players = [,[[9,9],[10,9],[9,10],[10,10]],[[0,9],[1,9],[0,10],[1,10]],[[0,0],[1,0],[0,1],[1,1]],[[9,0],[10,0],[9,1],[10,1]]]
+        game.players = [,
+          [[9,9],[10,9],[9,10],[10,10]],
+          [[9,0],[10,0],[9,1],[10,1]],
+          [[0,0],[1,0],[0,1],[1,1]],
+          [[0,9],[1,9],[0,10],[1,10]],
+        ]
         game.player = 1
         game.setPlayers()
       }
+
+      game.getId = (playerID, x, y)  => {
+        for (var i=0; i<4; ++i)
+          if(game.players[game.player][i][0] == x && game.players[game.player][i][1] == y)
+            return i
+      }
+
+      game.getFildId = (playerID, x, y)  => {
+        var count = 0
+        for (var xy of game.getFilds(playerID)) {
+          count++
+          if(xy[1] == x && xy[0] ==y) return count
+         }
+      }
+
+      game.move = (x, y) => {
+        console.log("A")
+        if(game.board.players[x][y] == game.player) {
+          console.log("B", game.getFildId(game.player, x, y))
+          var id = game.getId(game.player, x, y)
+          var fildId = game.getFildId(game.player, x, y)
+          if(fildId + game.dice.last < 48) {
+            console.log("C")
+            game.players[game.player][id] = game.getFilds(game.player)[fildId + game.dice.last]
+            if(++game.player > 4) game.player = 1
+            game.setPlayers()
+          }
+        }
+      }
+
+      var player = {}
 
     </script>
   </head>
