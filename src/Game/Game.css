@@ -23,13 +23,13 @@ body {
     float: left;
     font-size: 24px;
     font-weight: bold;
-    line-height: 34px;
-    height: 34px;
+    line-height: 40px;
+    height: 40px;
     margin-right: -1px;
     margin-top: -1px;
     padding: 0;
     text-align: center;
-    width: 34px;
+    width: 40px;
   }
   
   .square:focus {
@@ -58,19 +58,19 @@ body {
   }
 
   .p-blue {
-    background-color: #1565C0;
+    color: #1565C0;
   }
 
   .p-yellow {
-    background-color: #FBC02D;
+    color: #FBC02D;
   }
 
   .p-green {
-    background-color: #388E3C;
+    color: #388E3C;
   }
 
   .p-red {
-    background-color: #D32F2F;
+    color: #D32F2F;
   }
   
   .bg-empty {

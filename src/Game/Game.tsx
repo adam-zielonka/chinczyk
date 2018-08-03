@@ -59,38 +59,125 @@ const PlayerBoard = [,
 
 
 interface ISquareProps {
-    color: number | undefined
-    player?: number | undefined
+    color: number
+    activeColor: number
+    player?: number
+    onClick(): void
 }
 
 function Square(props: ISquareProps) {
   const color = (props.color === undefined ? '' : 'bg-' + Colors[props.color])
+  const stone = (<div className={'p-' + Colors[props.activeColor]}>&#11044;</div>)
   return (
-      <button className={'square ' + (color)}>
-          &nbsp;
+      <button className={'square ' + (color)} onClick={props.onClick}>
+        {props.activeColor ? stone : ' '}
       </button>
   )
 }
 
 interface IGameState {
-  filds: number
+  filds: number[][],
+  token: number
 }
 
 export default class Game extends React.Component<null, IGameState> {
 
-  constructor() {
-    super(null)
+  constructor(props) {
+    super(props)
     this.state = {
-      filds: 1
+      token: 2,
+      filds: [
+        [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
+        [3, 0,  ,  , 0, 0, 0,  ,  , 4, 4, ],
+        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+        [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [2, 0, 0, 0, 0,  , 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+        [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ],
+        [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ]
+      ]
     }
   }
 
+  public findNextFild(i: number, j: number, count: number) {
+    let result
+
+    // Start field
+    if (count === 6) {
+      for (const field of PlayerFilds[this.state.token].start) {
+        if (field[0] === j && field[1] === i) {
+          result = PlayerFilds[this.state.token].board[0]
+          break
+        }
+      }
+    }
+
+    if (!result) {
+      // Set path
+      let board = []
+      for (const id of PlayerFilds[this.state.token].order) {
+        board = board.concat(PlayerFilds[id].board)
+      }
+      board = board.concat(PlayerFilds[this.state.token].home)
+
+      // Find next field
+      let steps = 0
+      let found = false
+      for (const field of board) {
+        if (field[0] === j && field[1] === i) { found = true }
+        if (found) {
+          if (steps === count) {
+            result = field
+            break
+          }
+          steps++
+        }
+      }
+    }
+
+    // Update if posible
+    const filds = this.state.filds
+    if (result) {
+      if (filds[result[1]][result[0]] !== this.state.token) {
+        filds[i][j] = 0
+        if (filds[result[1]][result[0]]) {
+          for (const field of PlayerFilds[filds[result[1]][result[0]]].start) {
+            if (!filds[field[1]][field[0]]) {
+              filds[field[1]][field[0]] = filds[result[1]][result[0]]
+              break
+            }
+          }
+        }
+        filds[result[1]][result[0]] = this.state.token
+
+        let token = this.state.token + 1
+        if (token > 4) { token = 1 }
+        this.setState({ filds, token })
+      }
+    }
+  }
+
+  public moveStone(i: number, j: number, count: number) {
+    const filds = this.state.filds
+    if (filds[i][j] && filds[i][j] === this.state.token) {
+      this.findNextFild(i, j, count)
+    }
+  }
+
+  public onClick(i: number, j: number) {
+    this.moveStone(i, j, 1)
+  }
+
   public render() {
+    const filds = this.state.filds
     const row = []
     let squares = []
     for (let i = 0; i < Filds.length; i++) {
       for (let j = 0; j < Filds[i].length; j++) {
-        squares.push(<Square key={`${i}-${j}`} color={Filds[i][j]} />)
+        squares.push(<Square key={`${i}-${j}`} color={Filds[i][j]} activeColor={filds[i][j]} onClick={this.onClick.bind(this, i, j)}/>)
       }
       row.push(<div key={`r-${i}`} className='board-row'>{squares}</div>)
       squares = []
