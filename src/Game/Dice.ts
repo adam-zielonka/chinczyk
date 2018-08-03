@@ -1,7 +1,11 @@
 import { getRandom } from './Tools'
 
-export class Dice {
+export default class Dice {
   state: number
+
+  constructor() {
+    this.throw()
+  }
 
   throw(): number {
     this.state = getRandom(1, 6)

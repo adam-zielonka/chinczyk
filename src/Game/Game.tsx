@@ -1,4 +1,5 @@
 import * as React from 'react'
+import Dice from './Dice'
 import './Game.css'
 
 
@@ -77,7 +78,8 @@ function Square(props: ISquareProps) {
 
 interface IGameState {
   filds: number[][],
-  token: number
+  token: number,
+  dice: Dice
 }
 
 export default class Game extends React.Component<null, IGameState> {
@@ -85,14 +87,15 @@ export default class Game extends React.Component<null, IGameState> {
   constructor(props) {
     super(props)
     this.state = {
-      token: 2,
+      token: 1,
+      dice: new Dice(),
       filds: [
         [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
-        [3, 0,  ,  , 0, 0, 0,  ,  , 4, 4, ],
+        [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
         [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
         [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
-        [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
-        [2, 0, 0, 0, 0,  , 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0,  , 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
         [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
         [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
@@ -152,10 +155,8 @@ export default class Game extends React.Component<null, IGameState> {
           }
         }
         filds[result[1]][result[0]] = this.state.token
-
-        let token = this.state.token + 1
-        if (token > 4) { token = 1 }
-        this.setState({ filds, token })
+        this.setState({ filds })
+        this.nextPlayer()
       }
     }
   }
@@ -168,7 +169,18 @@ export default class Game extends React.Component<null, IGameState> {
   }
 
   public onClick(i: number, j: number) {
-    this.moveStone(i, j, 1)
+    this.moveStone(i, j, this.state.dice.state)
+  }
+
+  public noMoves(this) {
+    this.nextPlayer(this)
+  }
+
+  public nextPlayer(this) {
+    this.state.dice.throw()
+    let token = this.state.token + 1
+    if (token > 4) { token = 1 }
+    this.setState({ token })
   }
 
   public render() {
@@ -184,8 +196,17 @@ export default class Game extends React.Component<null, IGameState> {
     }
 
     return (
-      <div>
-        {row}
+      <div className='game'>
+        <div className='game-board'>
+          {row}
+        </div>
+        <div className='game-info'>
+            <div className={'bg-' + Colors[this.state.token]}>Player {this.state.token} - {Colors[this.state.token].toUpperCase()}</div>
+            <div>Dice: {this.state.dice.state}</div>
+            <button onClick={this.noMoves.bind(this, this)}>
+              No moves
+            </button>
+          </div>
       </div>
     )
   }
