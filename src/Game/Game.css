@@ -16,6 +16,11 @@ body {
   .status {
     margin-bottom: 10px;
   }
+
+  .numbers {
+    left: 0;
+    font-size: 10px;
+  }
   
   .square {
     background: #fff;
