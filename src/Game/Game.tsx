@@ -2,6 +2,9 @@ import * as React from 'react'
 import { Colors, Filds, PlayerFilds } from './Consts'
 import Dice from './Dice'
 import './Game.css'
+import Player, { IPlayer } from './Player'
+import PlayerFirst from './PlayerFirst'
+import PlayerLast from './PlayerLast'
 
 interface ISquareProps {
     color: number
@@ -25,20 +28,28 @@ function Square(props: ISquareProps) {
   )
 }
 
-interface IGameState {
+export interface IGameState {
   filds: number[][],
   token: number,
   dice: Dice,
-  winner: number
+  winner: number,
+  counter: number,
+  players: IPlayer[]
 }
 
 export default class Game extends React.Component<null, IGameState> {
 
   constructor(props) {
     super(props)
+    const players: IPlayer[] = []
+    players.push(new PlayerFirst(1))
+    players.push(new PlayerLast(2))
+    players.push(new PlayerFirst(3))
+    players.push(new PlayerLast(4))
     this.state = {
       winner: 0,
       token: 1,
+      counter: 0,
       dice: new Dice(),
       filds: [
         [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
@@ -52,7 +63,8 @@ export default class Game extends React.Component<null, IGameState> {
         [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
         [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ],
         [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ]
-      ]
+      ],
+      players
     }
   }
 
@@ -127,6 +139,10 @@ export default class Game extends React.Component<null, IGameState> {
     this.nextPlayer(this)
   }
 
+  public getCurrentPlayer(token): IPlayer {
+    return this.state.players[token - 1]
+  }
+
   public nextPlayer(this) {
     const winner = this.checkWiner()
     if (winner) {
@@ -136,6 +152,7 @@ export default class Game extends React.Component<null, IGameState> {
       let token = this.state.token + 1
       if (token > 4) { token = 1 }
       this.setState({ token })
+      setTimeout(() => this.getCurrentPlayer(token).play(this), 200)
     }
   }
 
@@ -210,7 +227,6 @@ export default class Game extends React.Component<null, IGameState> {
       <div className='game-info'>
         <div className={'bg-' + Colors[this.state.token]}>Player {this.state.token} - {Colors[this.state.token].toUpperCase()}</div>
         <div>Dice: {this.state.dice.state}</div>
-        <div>Winner: {winner}</div>
         <button onClick={this.noMoves.bind(this, this)} hidden={Boolean(actions.length)}>
           No moves
         </button>
