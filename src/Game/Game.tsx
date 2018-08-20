@@ -5,28 +5,7 @@ import './Game.css'
 import Player, { IPlayer } from './Player'
 import PlayerFirst from './PlayerFirst'
 import PlayerLast from './PlayerLast'
-
-interface ISquareProps {
-    color: number
-    activeColor: number
-    disabled: boolean
-    player?: number
-    x: number
-    y: number
-    onClick(): void
-}
-
-function Square(props: ISquareProps) {
-  const color = (props.color === undefined ? '' : 'bg-' + Colors[props.color])
-  const stone = (<div className={'p-' + Colors[props.activeColor]}>&#11044;</div>)
-  const numbers = '' // (<div className='numbers'>{props.x} {props.y}</div>)
-  return (
-      <button className={'square ' + (color)} onClick={props.onClick} disabled={props.disabled}>
-        {props.activeColor ? stone : props.color !== undefined ? numbers : ''}
-        {/* {props.color !== undefined ? numbers : ''} */}
-      </button>
-  )
-}
+import Square from './Square'
 
 export interface IGameState {
   filds: number[][],
@@ -244,6 +223,7 @@ export default class Game extends React.Component<null, IGameState> {
 
     return (
       <div className='game'>
+        <Setup game={this} />
         <div className='game-board'>
           {row}
         </div>
@@ -251,4 +231,48 @@ export default class Game extends React.Component<null, IGameState> {
       </div>
     )
   }
+}
+
+enum PlayerType {
+  None = 'None',
+  Human = 'Human',
+  FirstAI = 'FirstAI',
+  LastAI = 'LastAI'
+}
+
+const PlayersTypes: PlayerType[] = [
+  PlayerType.None,
+  PlayerType.Human,
+  PlayerType.FirstAI,
+  PlayerType.LastAI
+]
+
+
+function Setup( { game } ) {
+  const playerList = [
+    PlayerType.FirstAI,
+    PlayerType.LastAI,
+    PlayerType.FirstAI,
+    PlayerType.LastAI
+  ]
+  const playersSetup = []
+  for (let i = 1; i < 5; ++i) {
+    playersSetup.push(
+      <div key={i} className='setup'>
+        {Colors[i]}
+        {PlayersTypes.map(player => (
+          <div>
+            <input type='radio' name={Colors[i]} id={Colors[i] + player} value={player} />
+            <label htmlFor={Colors[i] + player}>{player}</label>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className='setups'>
+      {playersSetup}
+    </div>
+  )
 }
