@@ -5,7 +5,6 @@ import './Game.css'
 import Player, { IPlayer } from './Player'
 import PlayerFirst from './PlayerFirst'
 import PlayerLast from './PlayerLast'
-import Setup, { PlayerType } from './Setup'
 import Square from './Square'
 
 export interface IGameState {
@@ -17,6 +16,20 @@ export interface IGameState {
   players: IPlayer[],
   playerList: PlayerType[]
 }
+
+export enum PlayerType {
+  None = 'None',
+  Human = 'Human',
+  FirstAI = 'FirstAI',
+  LastAI = 'LastAI'
+}
+
+export const PlayersTypes: PlayerType[] = [
+  PlayerType.None,
+  PlayerType.Human,
+  PlayerType.FirstAI,
+  PlayerType.LastAI
+]
 
 export default class Game extends React.Component<null, IGameState> {
 
@@ -72,7 +85,7 @@ export default class Game extends React.Component<null, IGameState> {
     }
   }
 
-  public newGame() {
+  public newGame(this: Game) {
     const players: IPlayer[] = []
     let counter = 0
     for (const type of this.state.playerList) {
@@ -88,6 +101,7 @@ export default class Game extends React.Component<null, IGameState> {
             players.push(new Player(++counter))
             break
           default:
+            ++counter
             players.push(null)
             break
         }
@@ -266,6 +280,39 @@ export default class Game extends React.Component<null, IGameState> {
     return 0
   }
 
+  public setPlayerType(this: Game, id: number, ai: PlayerType) {
+    const playerList = this.state.playerList
+    playerList[id] = ai
+    this.setState({ playerList })
+  }
+
+  public renderSetup() {
+    const playersSetup = []
+    for (let i = 1; i < 5; ++i) {
+      playersSetup.push(
+        <div key={i} className='setup'>
+          {Colors[i]}
+          {PlayersTypes.map(player => (
+            <div key={player + i}>
+              <input type='radio' name={Colors[i]} id={Colors[i] + player} value={player}
+                checked={player === this.state.playerList[i]} onChange={this.setPlayerType.bind(this, i, player)}/>
+              <label htmlFor={Colors[i] + player}>{player}</label>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    return (
+      <div className='setups'>
+        {playersSetup}
+        <button onClick={this.newGame.bind(this, this)}>
+          New Game
+        </button>
+      </div>
+    )
+  }
+
   public render() {
     const filds = this.state.filds
     const actions = this.posibleActions()
@@ -302,7 +349,7 @@ export default class Game extends React.Component<null, IGameState> {
 
     return (
       <div className='game'>
-        <Setup playerList={this.state.playerList} game={this}/>
+        {this.renderSetup()}
         <div className='game-board'>
           {row}
         </div>
