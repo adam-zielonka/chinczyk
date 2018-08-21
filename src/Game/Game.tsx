@@ -5,6 +5,7 @@ import './Game.css'
 import Player, { IPlayer } from './Player'
 import PlayerFirst from './PlayerFirst'
 import PlayerLast from './PlayerLast'
+import Setup, { PlayerType } from './Setup'
 import Square from './Square'
 
 export interface IGameState {
@@ -13,18 +14,41 @@ export interface IGameState {
   dice: Dice,
   winner: number,
   counter: number,
-  players: IPlayer[]
+  players: IPlayer[],
+  playerList: PlayerType[]
 }
 
 export default class Game extends React.Component<null, IGameState> {
 
   constructor(props) {
     super(props)
+    const playerList = [,
+      PlayerType.FirstAI,
+      PlayerType.None,
+      PlayerType.LastAI,
+      PlayerType.None
+    ]
     const players: IPlayer[] = []
-    players.push(new PlayerFirst(1))
-    players.push(new PlayerLast(2))
-    players.push(new PlayerFirst(3))
-    players.push(new PlayerLast(4))
+    let counter = 0
+    for (const type of playerList) {
+      if (type) {
+        switch (type) {
+          case PlayerType.FirstAI:
+            players.push(new PlayerFirst(++counter))
+            break
+          case PlayerType.LastAI:
+            players.push(new PlayerLast(++counter))
+            break
+          case PlayerType.Human:
+            players.push(new Player(++counter))
+            break
+          default:
+            players.push(null)
+            break
+        }
+      }
+    }
+
     this.state = {
       winner: 0,
       token: 1,
@@ -43,9 +67,55 @@ export default class Game extends React.Component<null, IGameState> {
         [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ],
         [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ]
       ],
-      players
+      players,
+      playerList
     }
   }
+
+  public newGame() {
+    const players: IPlayer[] = []
+    let counter = 0
+    for (const type of this.state.playerList) {
+      if (type) {
+        switch (type) {
+          case PlayerType.FirstAI:
+            players.push(new PlayerFirst(++counter))
+            break
+          case PlayerType.LastAI:
+            players.push(new PlayerLast(++counter))
+            break
+          case PlayerType.Human:
+            players.push(new Player(++counter))
+            break
+          default:
+            players.push(null)
+            break
+        }
+      }
+    }
+    const token = this.nextToken()
+    this.setState({
+      winner: 0,
+      token,
+      counter: 0,
+      dice: new Dice(),
+      filds: [
+        [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
+        [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
+        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0,  , 0, 0, 0, 0, 0, ],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+        [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ],
+        [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ]
+      ],
+      players
+    })
+  }
+
 
   public findNextFild(i: number, j: number, count: number) {
     let result
@@ -118,7 +188,7 @@ export default class Game extends React.Component<null, IGameState> {
     this.nextPlayer(this)
   }
 
-  public getCurrentPlayer(token): IPlayer {
+  public getPlayer(token): IPlayer {
     return this.state.players[token - 1]
   }
 
@@ -128,11 +198,20 @@ export default class Game extends React.Component<null, IGameState> {
       this.setState({ winner })
     } else {
       this.state.dice.throw()
-      let token = this.state.token + 1
-      if (token > 4) { token = 1 }
+      const token = this.nextToken(this)
       this.setState({ token })
-      setTimeout(() => this.getCurrentPlayer(token).play(this), 200)
+      setTimeout(() => this.getPlayer(token).play(this), 50)
     }
+  }
+
+  public nextToken(this): number {
+    let token = this.state.token + 1
+    if (token > 4) { token = 1 }
+    while (!this.getPlayer(token)) {
+      token++
+      if (token > 4) { token = 1 }
+    }
+    return token
   }
 
   public posibleActions() {
@@ -223,7 +302,7 @@ export default class Game extends React.Component<null, IGameState> {
 
     return (
       <div className='game'>
-        <Setup game={this} />
+        <Setup playerList={this.state.playerList} game={this}/>
         <div className='game-board'>
           {row}
         </div>
@@ -231,48 +310,4 @@ export default class Game extends React.Component<null, IGameState> {
       </div>
     )
   }
-}
-
-enum PlayerType {
-  None = 'None',
-  Human = 'Human',
-  FirstAI = 'FirstAI',
-  LastAI = 'LastAI'
-}
-
-const PlayersTypes: PlayerType[] = [
-  PlayerType.None,
-  PlayerType.Human,
-  PlayerType.FirstAI,
-  PlayerType.LastAI
-]
-
-
-function Setup( { game } ) {
-  const playerList = [
-    PlayerType.FirstAI,
-    PlayerType.LastAI,
-    PlayerType.FirstAI,
-    PlayerType.LastAI
-  ]
-  const playersSetup = []
-  for (let i = 1; i < 5; ++i) {
-    playersSetup.push(
-      <div key={i} className='setup'>
-        {Colors[i]}
-        {PlayersTypes.map(player => (
-          <div>
-            <input type='radio' name={Colors[i]} id={Colors[i] + player} value={player} />
-            <label htmlFor={Colors[i] + player}>{player}</label>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  return (
-    <div className='setups'>
-      {playersSetup}
-    </div>
-  )
 }
