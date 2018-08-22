@@ -5,6 +5,7 @@ import './Game.css'
 import Player, { IPlayer } from './Player'
 import PlayerFirst from './PlayerFirst'
 import PlayerLast from './PlayerLast'
+import PlayerRandom from './PlayerRandom'
 import Square from './Square'
 
 export interface IGameState {
@@ -21,14 +22,16 @@ export enum PlayerType {
   None = 'None',
   Human = 'Human',
   FirstAI = 'FirstAI',
-  LastAI = 'LastAI'
+  LastAI = 'LastAI',
+  Random = 'Random'
 }
 
 export const PlayersTypes: PlayerType[] = [
   PlayerType.None,
   PlayerType.Human,
   PlayerType.FirstAI,
-  PlayerType.LastAI
+  PlayerType.LastAI,
+  PlayerType.Random
 ]
 
 export default class Game extends React.Component<null, IGameState> {
@@ -36,32 +39,12 @@ export default class Game extends React.Component<null, IGameState> {
   constructor(props) {
     super(props)
     const playerList = [,
-      PlayerType.FirstAI,
-      PlayerType.None,
-      PlayerType.LastAI,
-      PlayerType.None
+      PlayerType.Random,
+      PlayerType.Random,
+      PlayerType.Random,
+      PlayerType.Random
     ]
-    const players: IPlayer[] = []
-    let counter = 0
-    for (const type of playerList) {
-      if (type) {
-        switch (type) {
-          case PlayerType.FirstAI:
-            players.push(new PlayerFirst(++counter))
-            break
-          case PlayerType.LastAI:
-            players.push(new PlayerLast(++counter))
-            break
-          case PlayerType.Human:
-            players.push(new Player(++counter))
-            break
-          default:
-            players.push(null)
-            break
-        }
-      }
-    }
-
+    const players: IPlayer[] = this.getPlayers(playerList)
     this.state = {
       winner: 0,
       token: 1,
@@ -86,27 +69,7 @@ export default class Game extends React.Component<null, IGameState> {
   }
 
   public newGame(this: Game) {
-    const players: IPlayer[] = []
-    let counter = 0
-    for (const type of this.state.playerList) {
-      if (type) {
-        switch (type) {
-          case PlayerType.FirstAI:
-            players.push(new PlayerFirst(++counter))
-            break
-          case PlayerType.LastAI:
-            players.push(new PlayerLast(++counter))
-            break
-          case PlayerType.Human:
-            players.push(new Player(++counter))
-            break
-          default:
-            ++counter
-            players.push(null)
-            break
-        }
-      }
-    }
+    const players: IPlayer[] = this.getPlayers(this.state.playerList)
     const token = this.nextToken()
     this.setState({
       winner: 0,
@@ -128,6 +91,34 @@ export default class Game extends React.Component<null, IGameState> {
       ],
       players
     })
+  }
+
+  public getPlayers(playerList: PlayerType[]): IPlayer[] {
+    const players: IPlayer[] = []
+    let counter = 0
+    for (const type of playerList) {
+      if (type) {
+        switch (type) {
+          case PlayerType.FirstAI:
+            players.push(new PlayerFirst(++counter))
+            break
+          case PlayerType.LastAI:
+            players.push(new PlayerLast(++counter))
+            break
+          case PlayerType.Random:
+            players.push(new PlayerRandom(++counter))
+            break
+          case PlayerType.Human:
+            players.push(new Player(++counter))
+            break
+          default:
+            ++counter
+            players.push(null)
+            break
+        }
+      }
+    }
+    return players
   }
 
 
