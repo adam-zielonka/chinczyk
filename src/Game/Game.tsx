@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Colors, Filds, PlayerFilds } from './Consts'
 import Dice from './Dice'
 import './Game.css'
+import PlayerMCTS from './mcts/PlayerMCTS'
 import Player, { IPlayer } from './Player'
 import PlayerFirst from './PlayerFirst'
 import PlayerLast from './PlayerLast'
@@ -23,7 +24,8 @@ export enum PlayerType {
   Human = 'Human',
   FirstAI = 'FirstAI',
   LastAI = 'LastAI',
-  Random = 'Random'
+  Random = 'Random',
+  MCTS = 'MCTS'
 }
 
 export const PlayersTypes: PlayerType[] = [
@@ -31,45 +33,95 @@ export const PlayersTypes: PlayerType[] = [
   PlayerType.Human,
   PlayerType.FirstAI,
   PlayerType.LastAI,
-  PlayerType.Random
+  PlayerType.Random,
+  PlayerType.MCTS
 ]
 
 export default class Game extends React.Component<null, IGameState> {
 
-  constructor(props) {
-    super(props)
-    const playerList = [,
-      PlayerType.Random,
-      PlayerType.Random,
-      PlayerType.Random,
-      PlayerType.Random
-    ]
-    const players: IPlayer[] = this.getPlayers(playerList)
-    this.state = {
-      winner: 0,
-      token: 1,
-      counter: 0,
-      dice: new Dice(),
-      filds: [
-        [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
-        [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
-        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
-        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0,  , 0, 0, 0, 0, 0, ],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
-        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
-        [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
-        [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ],
-        [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ]
-      ],
-      players,
-      playerList
+  symulation: boolean
+  symulationState: IGameState
+
+  public setState(state: any) {
+    if (this.symulation) {
+      this.symulationState = {...this.symulationState, ...state}
+    } else {
+      super.setState(state)
     }
   }
 
+  public getState(): IGameState {
+    if (this.symulation) {
+      return this.symulationState
+    } else {
+      return this.state
+    }
+  }
+
+  constructor(game?: Game) {
+    super(null)
+    if (game instanceof Game) {
+      this.state = {
+        winner: game.state.winner,
+        token: game.state.token,
+        counter: game.state.counter,
+        dice: new Dice(game.state.dice),
+        filds: game.state.filds.map(p => p),
+        players: game.state.players.map(p => p),
+        playerList: game.state.playerList.map(p => p)
+      }
+      this.symulationState = {
+        winner: game.state.winner,
+        token: game.state.token,
+        counter: game.state.counter,
+        dice: new Dice(game.state.dice),
+        filds: game.state.filds.map(p => p),
+        players: game.state.players.map(p => p),
+        playerList: game.state.playerList.map(p => p)
+      }
+      this.symulation = true
+    } else {
+      const playerList = [,
+        PlayerType.MCTS,
+        PlayerType.LastAI,
+        PlayerType.FirstAI,
+        PlayerType.LastAI
+      ]
+      const players: IPlayer[] = this.getPlayers(playerList)
+      this.state = {
+        winner: 0,
+        token: 1,
+        counter: 0,
+        dice: new Dice(),
+        filds: [
+          [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
+          [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
+          [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+          [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 0,  , 0, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+          [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+          [ ,  ,  ,  , 0, 0, 0,  ,  ,  ,  , ],
+          [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ],
+          [2, 2,  ,  , 0, 0, 0,  ,  , 1, 1, ]
+        ],
+        players,
+        playerList
+      }
+      this.symulation = false
+    }
+  }
+
+  public stop() {
+    this.symulation = true
+    // this.symulationState = {...this.state}
+    console.log(this.symulation)
+  }
+
   public newGame(this: Game) {
-    const players: IPlayer[] = this.getPlayers(this.state.playerList)
+    this.stop()
+    const players: IPlayer[] = this.getPlayers(this.getState().playerList)
     const token = this.nextToken()
     this.setState({
       winner: 0,
@@ -93,6 +145,12 @@ export default class Game extends React.Component<null, IGameState> {
     })
   }
 
+  public startGame(this: Game) {
+    this.symulation = false
+    this.state = {...this.symulationState}
+    setTimeout(() => this.getPlayer(this.getState().token).play(this), 50)
+  }
+
   public getPlayers(playerList: PlayerType[]): IPlayer[] {
     const players: IPlayer[] = []
     let counter = 0
@@ -108,8 +166,11 @@ export default class Game extends React.Component<null, IGameState> {
           case PlayerType.Random:
             players.push(new PlayerRandom(++counter))
             break
-          case PlayerType.Human:
+            case PlayerType.Human:
             players.push(new Player(++counter))
+            break
+          case PlayerType.MCTS:
+            players.push(new PlayerMCTS(++counter))
             break
           default:
             ++counter
@@ -127,9 +188,9 @@ export default class Game extends React.Component<null, IGameState> {
 
     // Start field
     if (count === 6) {
-      for (const field of PlayerFilds[this.state.token].start) {
+      for (const field of PlayerFilds[this.getState().token].start) {
         if (field[0] === j && field[1] === i) {
-          result = PlayerFilds[this.state.token].board[0]
+          result = PlayerFilds[this.getState().token].board[0]
           break
         }
       }
@@ -138,10 +199,10 @@ export default class Game extends React.Component<null, IGameState> {
     if (!result) {
       // Set path
       let board = []
-      for (const id of PlayerFilds[this.state.token].order) {
+      for (const id of PlayerFilds[this.getState().token].order) {
         board = board.concat(PlayerFilds[id].board)
       }
-      board = board.concat(PlayerFilds[this.state.token].home)
+      board = board.concat(PlayerFilds[this.getState().token].home)
 
       // Find next field
       let steps = 0
@@ -159,9 +220,9 @@ export default class Game extends React.Component<null, IGameState> {
     }
 
     // Update if posible
-    const filds = this.state.filds
+    const filds = this.getState().filds
     if (result) {
-      if (filds[result[1]][result[0]] !== this.state.token) {
+      if (filds[result[1]][result[0]] !== this.getState().token) {
         filds[i][j] = 0
         if (filds[result[1]][result[0]]) {
           for (const field of PlayerFilds[filds[result[1]][result[0]]].start) {
@@ -171,7 +232,7 @@ export default class Game extends React.Component<null, IGameState> {
             }
           }
         }
-        filds[result[1]][result[0]] = this.state.token
+        filds[result[1]][result[0]] = this.getState().token
         this.setState({ filds })
         this.nextPlayer()
       }
@@ -179,14 +240,14 @@ export default class Game extends React.Component<null, IGameState> {
   }
 
   public moveStone(i: number, j: number, count: number) {
-    const filds = this.state.filds
-    if (filds[i][j] && filds[i][j] === this.state.token) {
+    const filds = this.getState().filds
+    if (filds[i][j] && filds[i][j] === this.getState().token) {
       this.findNextFild(i, j, count)
     }
   }
 
   public onClick(i: number, j: number) {
-    this.moveStone(i, j, this.state.dice.state)
+    this.moveStone(i, j, this.getState().dice.state)
   }
 
   public noMoves(this) {
@@ -194,7 +255,7 @@ export default class Game extends React.Component<null, IGameState> {
   }
 
   public getPlayer(token): IPlayer {
-    return this.state.players[token - 1]
+    return this.getState().players[token - 1]
   }
 
   public nextPlayer(this) {
@@ -202,15 +263,17 @@ export default class Game extends React.Component<null, IGameState> {
     if (winner) {
       this.setState({ winner })
     } else {
-      this.state.dice.throw()
+      this.getState().dice.throw()
       const token = this.nextToken(this)
       this.setState({ token })
-      setTimeout(() => this.getPlayer(token).play(this), 50)
+      if (!this.symulation) {
+        setTimeout(() => this.getPlayer(token).play(this), 50)
+      }
     }
   }
 
   public nextToken(this): number {
-    let token = this.state.token + 1
+    let token = this.getState().token + 1
     if (token > 4) { token = 1 }
     while (!this.getPlayer(token)) {
       token++
@@ -220,9 +283,9 @@ export default class Game extends React.Component<null, IGameState> {
   }
 
   public posibleActions() {
-    const fields = this.state.filds
-    const token = this.state.token
-    const count = this.state.dice.state
+    const fields = this.getState().filds
+    const token = this.getState().token
+    const count = this.getState().dice.state
     const result = []
 
     // Start field
@@ -256,7 +319,7 @@ export default class Game extends React.Component<null, IGameState> {
   }
 
   public checkWiner(): number {
-    const fields = this.state.filds
+    const fields = this.getState().filds
     let playerID = 0
     for (const player of PlayerFilds) {
       if (player) {
@@ -272,7 +335,7 @@ export default class Game extends React.Component<null, IGameState> {
   }
 
   public setPlayerType(this: Game, id: number, ai: PlayerType) {
-    const playerList = this.state.playerList
+    const playerList = this.getState().playerList
     playerList[id] = ai
     this.setState({ playerList })
   }
@@ -286,7 +349,7 @@ export default class Game extends React.Component<null, IGameState> {
           {PlayersTypes.map(player => (
             <div key={player + i}>
               <input type='radio' name={Colors[i]} id={Colors[i] + player} value={player}
-                checked={player === this.state.playerList[i]} onChange={this.setPlayerType.bind(this, i, player)}/>
+                checked={player === this.getState().playerList[i]} onChange={this.setPlayerType.bind(this, i, player)}/>
               <label htmlFor={Colors[i] + player}>{player}</label>
             </div>
           ))}
@@ -297,17 +360,22 @@ export default class Game extends React.Component<null, IGameState> {
     return (
       <div className='setups'>
         {playersSetup}
-        <button onClick={this.newGame.bind(this, this)}>
-          New Game
+        <div className='setup'>
+          <button onClick={this.newGame.bind(this, this)}>
+            New Game
+          </button>
+        </div>
+        <button onClick={this.startGame.bind(this, this)}>
+          Start Game
         </button>
       </div>
     )
   }
 
   public render() {
-    const filds = this.state.filds
+    const filds = this.getState().filds
     const actions = this.posibleActions()
-    const winner = this.state.winner
+    const winner = this.getState().winner
     const row = []
     let squares = []
     for (let i = 0; i < Filds.length; i++) {
@@ -321,8 +389,9 @@ export default class Game extends React.Component<null, IGameState> {
 
     const gameInfo = !winner ? (
       <div className='game-info'>
-        <div className={'bg-' + Colors[this.state.token]}>Player {this.state.token} - {Colors[this.state.token].toUpperCase()}</div>
-        <div>Dice: {this.state.dice.state}</div>
+        <div className={'bg-' + Colors[this.getState().token]}>
+          Player {this.getState().token} - {Colors[this.getState().token].toUpperCase()}</div>
+        <div>Dice: {this.getState().dice.state}</div>
         <button onClick={this.noMoves.bind(this, this)} hidden={Boolean(actions.length)}>
           No moves
         </button>
