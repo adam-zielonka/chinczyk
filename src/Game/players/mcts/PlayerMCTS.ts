@@ -1,4 +1,4 @@
-import Game from '../Game'
+import Game from '../../Game'
 import Player from '../Player'
 import Node from './Node'
 import State from './State'

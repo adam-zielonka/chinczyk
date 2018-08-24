@@ -1,6 +1,6 @@
-import Game from './Game'
+import Game from '../Game'
+import { getRandom } from '../Tools'
 import Player from './Player'
-import { getRandom } from './Tools'
 
 export default class PlayerRandom extends Player {
 

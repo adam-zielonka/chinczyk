@@ -1,5 +1,5 @@
-import { Colors } from './Consts'
-import Game from './Game'
+import { Colors } from '../Consts'
+import Game from '../Game'
 
 export interface IPlayer {
   id: number
