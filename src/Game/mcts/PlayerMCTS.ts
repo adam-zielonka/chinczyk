@@ -27,16 +27,16 @@ export default class PlayerMCTS extends Player {
   public simulateRandomPlayout(node: Node): number {
     let status = node.state.game.checkWiner()
     if (status) {
-      return node.state.game.getState().token !== this.id ? 10 : 0
+      return status === this.id ? 10 : 0
     }
     const state = new State(node.state.game)
-    let counter = 1000
+    let counter = 100
     while (!status && --counter) {
         state.randomPlay()
         status = node.state.game.checkWiner()
     }
     if (!counter) {
-      return 0
+      return 10 * node.state.game.complateStatus() / 4
     } else {
       return status === this.id ? 10 : 0
     }
@@ -54,13 +54,13 @@ export default class PlayerMCTS extends Player {
 
   public getResult(game: Game): number[] {
     const tree = new Tree(game)
-
+    console.log(tree)
     let iter = 100
     while (iter--) {
       // 1. Select promising node
       console.log('Loop')
       const promisingNode = this.selectPromisingNode(tree.root)
-      if (promisingNode.state.game.checkWiner()) {
+      if (!promisingNode.state.game.checkWiner()) {
         this.expandNode(promisingNode)
       }
       // 2. Symulation
@@ -75,6 +75,7 @@ export default class PlayerMCTS extends Player {
       // }
       this.backPropogation(nodeToExplore, playoutResult)
     }
+    console.log(tree)
     tree.print()
     const winnerNode = tree.root.getChildWithMaxScore()
     tree.root.printPoints()
@@ -84,9 +85,8 @@ export default class PlayerMCTS extends Player {
 
   play(game: Game) {
     super.play(game)
-    console.log('Start')
+    console.log('MCTS')
     const actions = game.posibleActions()
-    console.log(actions)
     switch (actions.length) {
       case 0:
         game.noMoves()
@@ -96,7 +96,6 @@ export default class PlayerMCTS extends Player {
         break
       default:
         const result = this.getResult(game)
-
         if (result) {
           game.onClick(result[1], result[0])
         } else {
@@ -104,7 +103,6 @@ export default class PlayerMCTS extends Player {
         }
         break
     }
-
   }
 
 }

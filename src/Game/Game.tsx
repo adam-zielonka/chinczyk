@@ -40,6 +40,7 @@ export const PlayersTypes: PlayerType[] = [
 export default class Game extends React.Component<null, IGameState> {
 
   symulation: boolean
+  stopGame: boolean
   symulationState: IGameState
 
   public setState(state: any) {
@@ -61,25 +62,17 @@ export default class Game extends React.Component<null, IGameState> {
   constructor(game?: Game) {
     super(null)
     if (game instanceof Game) {
-      this.state = {
-        winner: game.state.winner,
-        token: game.state.token,
-        counter: game.state.counter,
-        dice: new Dice(game.state.dice),
-        filds: game.state.filds.map(p => p),
-        players: game.state.players.map(p => p),
-        playerList: game.state.playerList.map(p => p)
-      }
       this.symulationState = {
-        winner: game.state.winner,
-        token: game.state.token,
-        counter: game.state.counter,
-        dice: new Dice(game.state.dice),
-        filds: game.state.filds.map(p => p),
-        players: game.state.players.map(p => p),
-        playerList: game.state.playerList.map(p => p)
+        winner: game.getState().winner,
+        token: game.getState().token,
+        counter: game.getState().counter,
+        dice: new Dice(game.getState().dice),
+        filds: game.getState().filds.map(p => p.map(f => f)),
+        players: game.getState().players.map(p => p),
+        playerList: game.getState().playerList.map(p => p)
       }
       this.symulation = true
+      this.stopGame = true
     } else {
       const playerList = [,
         PlayerType.MCTS,
@@ -110,13 +103,12 @@ export default class Game extends React.Component<null, IGameState> {
         playerList
       }
       this.symulation = false
+      this.stopGame = true
     }
   }
 
   public stop() {
-    this.symulation = true
-    // this.symulationState = {...this.state}
-    console.log(this.symulation)
+    this.stopGame = true
   }
 
   public newGame(this: Game) {
@@ -146,8 +138,7 @@ export default class Game extends React.Component<null, IGameState> {
   }
 
   public startGame(this: Game) {
-    this.symulation = false
-    this.state = {...this.symulationState}
+    this.stopGame = false
     setTimeout(() => this.getPlayer(this.getState().token).play(this), 50)
   }
 
@@ -266,7 +257,7 @@ export default class Game extends React.Component<null, IGameState> {
       this.getState().dice.throw()
       const token = this.nextToken(this)
       this.setState({ token })
-      if (!this.symulation) {
+      if (!this.symulation && !this.stopGame) {
         setTimeout(() => this.getPlayer(token).play(this), 50)
       }
     }
@@ -332,6 +323,16 @@ export default class Game extends React.Component<null, IGameState> {
       }
     }
     return 0
+  }
+
+  public complateStatus(): number {
+    const fields = this.getState().filds
+    const player = PlayerFilds[this.getState().token]
+    let counter = 0
+    for (const field of player.home) {
+      if (fields[field[1]][field[0]] === this.getState().token) { ++counter }
+    }
+    return counter
   }
 
   public setPlayerType(this: Game, id: number, ai: PlayerType) {

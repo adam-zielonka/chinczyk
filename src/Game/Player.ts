@@ -11,6 +11,6 @@ export default class Player implements IPlayer {
   constructor(public id: number) {}
 
   play(game: Game) {
-    console.log('Player ' + Colors[this.id])
+    // console.log('Player ' + Colors[this.id])
   }
 }
