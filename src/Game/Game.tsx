@@ -36,7 +36,7 @@ export const PlayersTypes: PlayerType[] = [
   PlayerType.MCTS
 ]
 
-export default class Game extends React.Component<null, IGameState> {
+export default class Game extends React.Component<{}, IGameState> {
 
   symulation: boolean
   stopGame: boolean
