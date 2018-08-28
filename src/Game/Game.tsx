@@ -14,7 +14,6 @@ export interface IGameState {
   token: number,
   dice: Dice,
   winner: number,
-  counter: number,
   players: IPlayer[],
   playerList: PlayerType[]
 }
@@ -37,11 +36,13 @@ export const PlayersTypes: PlayerType[] = [
   PlayerType.MCTS
 ]
 
-export default class Game extends React.Component<null, IGameState> {
+export default class Game extends React.Component<{}, IGameState> {
 
   symulation: boolean
   stopGame: boolean
   symulationState: IGameState
+  double: boolean
+  counter: number
 
   public setState(state: any) {
     if (this.symulation) {
@@ -61,11 +62,12 @@ export default class Game extends React.Component<null, IGameState> {
 
   constructor(game?: Game) {
     super(null)
+    this.double = false
+    this.counter = 0
     if (game instanceof Game) {
       this.symulationState = {
         winner: game.getState().winner,
         token: game.getState().token,
-        counter: game.getState().counter,
         dice: new Dice(game.getState().dice),
         filds: game.getState().filds.map(p => p.map(f => f)),
         players: game.getState().players.map(p => p),
@@ -73,6 +75,8 @@ export default class Game extends React.Component<null, IGameState> {
       }
       this.symulation = true
       this.stopGame = true
+      this.double = game.double
+      this.counter = game.counter
     } else {
       const playerList = [,
         PlayerType.MCTS,
@@ -84,7 +88,6 @@ export default class Game extends React.Component<null, IGameState> {
       this.state = {
         winner: 0,
         token: 1,
-        counter: 0,
         dice: new Dice(),
         filds: [
           [3, 3,  ,  , 0, 0, 0,  ,  , 4, 4, ],
@@ -179,9 +182,11 @@ export default class Game extends React.Component<null, IGameState> {
 
     // Start field
     if (count === 6) {
+      this.double = true
       for (const field of PlayerFilds[this.getState().token].start) {
         if (field[0] === j && field[1] === i) {
           result = PlayerFilds[this.getState().token].board[0]
+          this.double = false
           break
         }
       }
@@ -263,7 +268,31 @@ export default class Game extends React.Component<null, IGameState> {
     }
   }
 
-  public nextToken(this): number {
+  public stoneOnStart() {
+    const fields = this.getState().filds
+    const token = this.getState().token
+    const result = []
+
+    for (const field of PlayerFilds[token].start) {
+      const [x, y] = PlayerFilds[token].board[0]
+      if (fields[field[1]][field[0]] === token && fields[y][x] !== token) {
+        result.push(field)
+      }
+    }
+    return result
+  }
+
+  public nextToken(this: Game): number {
+    if (this.double) {
+      this.double = false
+      return this.getState().token
+    }
+    if (this.counter < 2 && this.stoneOnStart().length === 4) {
+      this.counter++
+      return this.getState().token
+    } else {
+      this.counter = 0
+    }
     let token = this.getState().token + 1
     if (token > 4) { token = 1 }
     while (!this.getPlayer(token)) {
