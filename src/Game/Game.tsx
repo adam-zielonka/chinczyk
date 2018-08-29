@@ -4,6 +4,7 @@ import Dice from './Dice'
 import './Game.css'
 import PlayerMCTS from './players/mcts/PlayerMCTS'
 import Player, { IPlayer } from './players/Player'
+import PlayerAZ from './players/PlayerAZ'
 import PlayerFirst from './players/PlayerFirst'
 import PlayerLast from './players/PlayerLast'
 import PlayerRandom from './players/PlayerRandom'
@@ -24,7 +25,8 @@ export enum PlayerType {
   FirstAI = 'FirstAI',
   LastAI = 'LastAI',
   Random = 'Random',
-  MCTS = 'MCTS'
+  MCTS = 'MCTS',
+  AZ = 'AZ'
 }
 
 export const PlayersTypes: PlayerType[] = [
@@ -33,7 +35,8 @@ export const PlayersTypes: PlayerType[] = [
   PlayerType.FirstAI,
   PlayerType.LastAI,
   PlayerType.Random,
-  PlayerType.MCTS
+  PlayerType.MCTS,
+  PlayerType.AZ
 ]
 
 export default class Game extends React.Component<{}, IGameState> {
@@ -61,9 +64,7 @@ export default class Game extends React.Component<{}, IGameState> {
   }
 
   constructor(game?: Game) {
-    super(null)
-    this.double = false
-    this.counter = 0
+    super(game)
     if (game instanceof Game) {
       this.symulationState = {
         winner: game.getState().winner,
@@ -105,6 +106,8 @@ export default class Game extends React.Component<{}, IGameState> {
         players,
         playerList
       }
+      this.double = false
+      this.counter = 0
       this.symulation = false
       this.stopGame = true
     }
@@ -117,7 +120,7 @@ export default class Game extends React.Component<{}, IGameState> {
   public newGame(this: Game) {
     this.stop()
     const players: IPlayer[] = this.getPlayers(this.getState().playerList)
-    const token = this.nextToken()
+    const token = this.startToken(players, 1)
     this.setState({
       winner: 0,
       token,
@@ -165,6 +168,9 @@ export default class Game extends React.Component<{}, IGameState> {
             break
           case PlayerType.MCTS:
             players.push(new PlayerMCTS(++counter))
+            break
+          case PlayerType.AZ:
+            players.push(new PlayerAZ(++counter))
             break
           default:
             ++counter
@@ -252,6 +258,15 @@ export default class Game extends React.Component<{}, IGameState> {
 
   public getPlayer(token): IPlayer {
     return this.getState().players[token - 1]
+  }
+
+  public startToken(players: IPlayer[], token: number) {
+    if (token > 4) { token = 1 }
+    while (!players[token - 1]) {
+      token++
+      if (token > 4) { token = 1 }
+    }
+    return token
   }
 
   public nextPlayer(this) {
@@ -386,16 +401,17 @@ export default class Game extends React.Component<{}, IGameState> {
         </div>
       )
     }
-
+    let playersCount = 0
+    this.getState().playerList.forEach(player => player === PlayerType.None ? playersCount++ : null)
     return (
       <div className='setups'>
         {playersSetup}
         <div className='setup'>
-          <button onClick={this.newGame.bind(this, this)}>
+          <button onClick={this.newGame.bind(this, this)} disabled={playersCount === 4}>
             New Game
           </button>
         </div>
-        <button onClick={this.startGame.bind(this, this)}>
+        <button onClick={this.startGame.bind(this, this)} disabled={playersCount === 4}>
           Start Game
         </button>
       </div>
