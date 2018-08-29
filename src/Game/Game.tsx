@@ -389,7 +389,7 @@ export default class Game extends React.Component<{}, IGameState> {
     const playersSetup = []
     for (let i = 1; i < 5; ++i) {
       playersSetup.push(
-        <div key={i} className='setup'>
+        <div key={i} className={'setup bg-' + Colors[i]}>
           {Colors[i]}
           {PlayersTypes.map(player => (
             <div key={player + i}>
@@ -406,14 +406,14 @@ export default class Game extends React.Component<{}, IGameState> {
     return (
       <div className='setups'>
         {playersSetup}
-        <div className='setup'>
+        <div className='buttons'>
           <button onClick={this.newGame.bind(this, this)} disabled={playersCount === 4}>
             New Game
           </button>
+          <button onClick={this.startGame.bind(this, this)} disabled={playersCount === 4}>
+            Start Game
+          </button>
         </div>
-        <button onClick={this.startGame.bind(this, this)} disabled={playersCount === 4}>
-          Start Game
-        </button>
       </div>
     )
   }
@@ -454,12 +454,14 @@ export default class Game extends React.Component<{}, IGameState> {
     )
 
     return (
-      <div className='game'>
-        {this.renderSetup()}
-        <div className='game-board'>
-          {row}
+      <div>
+        <div className='game'>
+          <div className='game-board'>
+            {row}
+          </div>
+          {gameInfo}
         </div>
-        {gameInfo}
+        {this.renderSetup()}
       </div>
     )
   }

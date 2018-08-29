@@ -100,4 +100,10 @@ body {
   
   .setup {
     padding-right: 10px;
+    float: left;
+  }
+
+  .buttons {
+    float: left;
+    clear: left;
   }
