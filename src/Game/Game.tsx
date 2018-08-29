@@ -379,6 +379,28 @@ export default class Game extends React.Component<{}, IGameState> {
     return counter
   }
 
+  public complateProcent(): number {
+    const fields = this.getState().filds
+    const player = PlayerFilds[this.getState().token]
+    const token = this.getState().token
+
+    let board = []
+    for (const id of PlayerFilds[token].order) {
+      board = board.concat(PlayerFilds[id].board)
+    }
+    board = board.concat(PlayerFilds[token].home)
+
+    let points = 0
+    let i = 1
+    for (const field of board) {
+      if (fields[field[1]][field[0]] === token) {
+        points += i
+      }
+      ++i
+    }
+    return points / (4 * 42.5) // (4 stones * avarage fields)
+  }
+
   public setPlayerType(this: Game, id: number, ai: PlayerType) {
     const playerList = this.getState().playerList
     playerList[id] = ai

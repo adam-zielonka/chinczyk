@@ -1,3 +1,4 @@
+import { round } from '../../Tools'
 import State from './State'
 import UCT from './UCT'
 
@@ -28,8 +29,9 @@ export default class Node {
 
   printPoints() {
     for (const node of this.childArray) {
-      console.log(node)
-      console.log(`${node.state.winScore / 10}/${node.state.visitCount}`)
+      // console.log(node)
+      console.log(`${node.state.action[1]} ${node.state.action[0]} - ${
+        round(node.state.winScore / 10, 2)}/${node.state.visitCount}`)
     }
   }
 }
