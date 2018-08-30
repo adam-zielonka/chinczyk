@@ -11,6 +11,10 @@ export default class Player implements IPlayer {
   constructor(public id: number) {}
 
   play(game: Game) {
-    // console.log('Player ' + Colors[this.id])
+    console.log('%c ' + '%c Player ' + Colors[this.id] + '\t%c ',
+      `background: ${Colors[this.id]}`,
+      '',
+      `background: ${Colors[this.id]}`
+    )
   }
 }

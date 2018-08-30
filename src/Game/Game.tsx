@@ -16,7 +16,8 @@ export interface IGameState {
   dice: Dice,
   winner: number,
   players: IPlayer[],
-  playerList: PlayerType[]
+  playerList: PlayerType[],
+  movesCount: number
 }
 
 export enum PlayerType {
@@ -67,6 +68,7 @@ export default class Game extends React.Component<{}, IGameState> {
     super(game)
     if (game instanceof Game) {
       this.symulationState = {
+        movesCount: game.getState().token,
         winner: game.getState().winner,
         token: game.getState().token,
         dice: new Dice(game.getState().dice),
@@ -87,6 +89,7 @@ export default class Game extends React.Component<{}, IGameState> {
       ]
       const players: IPlayer[] = this.getPlayers(playerList)
       this.state = {
+        movesCount: 0,
         winner: 0,
         token: 1,
         dice: new Dice(),
@@ -122,6 +125,7 @@ export default class Game extends React.Component<{}, IGameState> {
     const players: IPlayer[] = this.getPlayers(this.getState().playerList)
     const token = this.startToken(players, 1)
     this.setState({
+      movesCount: 0,
       winner: 0,
       token,
       counter: 0,
@@ -275,9 +279,10 @@ export default class Game extends React.Component<{}, IGameState> {
       this.setState({ winner })
     } else {
       this.getState().dice.throw()
-      const token = this.nextToken(this)
-      this.setState({ token })
       if (!this.symulation && !this.stopGame) {
+        const token = this.nextToken(this)
+        const movesCount = this.getState().movesCount + 1
+        this.setState({ token, movesCount })
         setTimeout(() => this.getPlayer(token).play(this), 50)
       }
     }
@@ -457,6 +462,9 @@ export default class Game extends React.Component<{}, IGameState> {
 
     const gameInfo = !winner ? (
       <div className='game-info'>
+        <div>
+          Moves: {this.state.movesCount}
+        </div>
         <div className={'bg-' + Colors[this.getState().token]}>
           Player {this.getState().token} - {Colors[this.getState().token].toUpperCase()}</div>
         <div>Dice: {this.getState().dice.state}</div>
@@ -471,6 +479,9 @@ export default class Game extends React.Component<{}, IGameState> {
       </div>
     ) : (
       <div className='game-info'>
+        <div>
+          Moves: {this.state.movesCount}
+        </div>
         <div className={'bg-' + Colors[winner]}>Winner: Player {winner} - {Colors[winner].toUpperCase()}</div>
       </div>
     )
