@@ -385,9 +385,12 @@ export default class Game extends React.Component<{}, IGameState> {
   }
 
   public complateProcent(): number {
-    const fields = this.getState().filds
-    const player = PlayerFilds[this.getState().token]
     const token = this.getState().token
+    return this.complateProcentT(token)
+  }
+
+  public complateProcentT(token: number): number {
+    const fields = this.getState().filds
 
     let board = []
     for (const id of PlayerFilds[token].order) {
@@ -460,6 +463,16 @@ export default class Game extends React.Component<{}, IGameState> {
       squares = []
     }
 
+    const stats = (
+      <div>
+        {this.state.players.map(player => player ? (
+          <div key={'player' + player.id}>
+            {Colors[player.id]} - {Math.round(this.complateProcentT(player.id) * 10000) / 100}%
+          </div>
+        ) : '')}
+      </div>
+    )
+
     const gameInfo = !winner ? (
       <div className='game-info'>
         <div>
@@ -476,6 +489,7 @@ export default class Game extends React.Component<{}, IGameState> {
             {action[1]} {action[0]}
           </button>
         ))}
+        <div>{stats}</div>
       </div>
     ) : (
       <div className='game-info'>
@@ -483,6 +497,7 @@ export default class Game extends React.Component<{}, IGameState> {
           Moves: {this.state.movesCount}
         </div>
         <div className={'bg-' + Colors[winner]}>Winner: Player {winner} - {Colors[winner].toUpperCase()}</div>
+        <div>{stats}</div>
       </div>
     )
 
