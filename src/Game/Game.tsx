@@ -47,6 +47,7 @@ export default class Game extends React.Component<{}, IGameState> {
   symulationState: IGameState
   double: boolean
   counter: number
+  diceMove: boolean
 
   public setState(state: any) {
     if (this.symulation) {
@@ -80,6 +81,7 @@ export default class Game extends React.Component<{}, IGameState> {
       this.stopGame = true
       this.double = game.double
       this.counter = game.counter
+      this.diceMove = game.diceMove
     } else {
       const playerList = [,
         PlayerType.MCTS,
@@ -109,6 +111,7 @@ export default class Game extends React.Component<{}, IGameState> {
         players,
         playerList
       }
+      this.diceMove = false
       this.double = false
       this.counter = 0
       this.symulation = false
@@ -278,8 +281,8 @@ export default class Game extends React.Component<{}, IGameState> {
     if (winner) {
       this.setState({ winner })
     } else {
-      this.getState().dice.throw()
       if (!this.symulation && !this.stopGame) {
+        this.getState().dice.throw()
         const token = this.nextToken(this)
         const movesCount = this.getState().movesCount + 1
         this.setState({ token, movesCount })

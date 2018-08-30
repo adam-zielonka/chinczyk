@@ -16,22 +16,37 @@ export default class State {
 
   public getAllPossibleStates() {
     const states = []
-    for (const action of this.game.posibleActions()) {
-      const fun = () => {
-        const state = new State(this.game)
-        state.game.onClick(action[1], action[0])
-        state.action = action.map(a => a)
-        return state
+    if (this.game.diceMove) {
+      for (let i = 1; i <= 6; ++i) {
+        const fun = () => {
+          const state = new State(this.game)
+          state.game.diceMove = false
+          const dice = state.game.getState().dice
+          dice.state = i
+          return state
+        }
+        states.push(fun)
       }
-      states.push(fun)
-    }
-    if (!states.length) {
-      const fun = () => {
-        const state = new State(this.game)
-        state.game.noMoves()
-        return state
+    } else {
+      for (const action of this.game.posibleActions()) {
+        const fun = () => {
+          const state = new State(this.game)
+          state.game.diceMove = true
+          state.game.onClick(action[1], action[0])
+          state.action = action.map(a => a)
+          return state
+        }
+        states.push(fun)
       }
-      states.push(fun)
+      if (!states.length) {
+        const fun = () => {
+          const state = new State(this.game)
+          state.game.diceMove = true
+          state.game.noMoves()
+          return state
+        }
+        states.push(fun)
+      }
     }
     return states
   }

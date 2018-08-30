@@ -39,6 +39,7 @@ export default class PlayerMCTS extends Player {
     if (!counter) {
       // return 10 * node.state.game.complateStatus() / 4
       return 10 * node.state.game.complateProcent()
+      // return 0
     } else {
       return status === this.id ? 10 : 0
     }
