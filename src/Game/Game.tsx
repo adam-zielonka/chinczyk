@@ -366,6 +366,7 @@ export default class Game extends React.Component<{}, IGameState> {
     const token = this.getState().token
     const count = this.getState().dice.state
     const result = []
+    const start = []
 
     // Start field
     if (count === 6) {
@@ -373,6 +374,7 @@ export default class Game extends React.Component<{}, IGameState> {
         const [x, y] = PlayerFilds[token].board[0]
         if (fields[field[1]][field[0]] === token && fields[y][x] !== token) {
           result.push(0)
+          start.push(40)
         }
       }
     }
@@ -390,11 +392,12 @@ export default class Game extends React.Component<{}, IGameState> {
       if (fields[field[1]][field[0]] === token) {
         if (board.length - 1 >= i + count && fields[board[i + count][1]][board[i + count][0]] !== token) {
           result.push(i + count)
+          start.push(i)
         }
       }
       ++i
     }
-    return result
+    return [result, start]
   }
 
   public checkWiner(): number {

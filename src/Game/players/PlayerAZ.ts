@@ -49,13 +49,15 @@ export default class PlayerAZ extends Player {
       return 0
     })
 
-    // console.log(stones)
-    // console.log(destruction)
+    console.log(stones)
+    console.log(destruction)
 
     for (let n = 0; n < stones.length; ++n) {
       for (let k = 1; k <= destruction[n]; ++k) {
         if (result.length - 4 > stones[n] + k) {
           ++result[stones[n] + k]
+        } else {
+          ++result[stones[n] + k - result.length + 4]
         }
       }
     }
@@ -76,10 +78,49 @@ export default class PlayerAZ extends Player {
     return [result, board]
   }
 
+  selectBestAction(result, metaResult): number {
+    let selectedAction = 0
+    let point = Number.MAX_VALUE
+    const points = []
+    let i = 0
+    for (const fieldID of metaResult) {
+      points.push(result[fieldID])
+      if (result[fieldID] <= point) {
+        selectedAction = i
+        point = result[fieldID]
+      }
+      ++i
+    }
+    console.log(points)
+    return selectedAction
+  }
+
+  selectDangerAction(result, metaStart): number {
+    let selectedAction = 0
+    let point = Number.MIN_VALUE
+    const points = []
+    let i = 0
+    for (const fieldID of metaStart) {
+      points.push(result[fieldID])
+      if (result[fieldID] >= point) {
+        selectedAction = i
+        point = result[fieldID]
+      }
+      ++i
+    }
+    console.log(points)
+    if (!point) {
+      return selectedAction
+    } else {
+      return null
+    }
+  }
+
+
   play(game: Game) {
     super.play(game)
     const actions = game.posibleActions()
-    const acitonsMetaData = game.posibleActionsMetaData()
+    const [metaResult, metaStart] = game.posibleActionsMetaData()
     switch (actions.length) {
       case 0:
         game.noMoves()
@@ -90,19 +131,12 @@ export default class PlayerAZ extends Player {
       default:
         console.log('AZ')
         const [result, board] = this.fieldsOfDestruction(game)
-        let selectedAction = 0
-        let point = Number.MAX_VALUE
-        const points = []
-        let i = 0
-        for (const fieldID of acitonsMetaData) {
-          points.push(result[fieldID])
-          if (result[fieldID] <= point) {
-            selectedAction = i
-            point = result[fieldID]
-          }
-          ++i
+        console.log(result)
+        let selectedAction = this.selectBestAction(result, metaResult)
+        const dangerAction = this.selectDangerAction(result, metaStart)
+        if (dangerAction) {
+          selectedAction = dangerAction
         }
-        console.log(points)
         game.onClick(actions[selectedAction][1], actions[selectedAction][0])
         break
     }
