@@ -361,6 +361,42 @@ export default class Game extends React.Component<{}, IGameState> {
     return result
   }
 
+  public posibleActionsMetaData() {
+    const fields = this.getState().filds
+    const token = this.getState().token
+    const count = this.getState().dice.state
+    const result = []
+
+    // Start field
+    if (count === 6) {
+      for (const field of PlayerFilds[token].start) {
+        const [x, y] = PlayerFilds[token].board[0]
+        if (fields[field[1]][field[0]] === token && fields[y][x] !== token) {
+          result.push(0)
+        }
+      }
+    }
+
+    // Set path
+    let board = []
+    for (const id of PlayerFilds[token].order) {
+      board = board.concat(PlayerFilds[id].board)
+    }
+    board = board.concat(PlayerFilds[token].home)
+
+    // Find next field
+    let i = 0
+    for (const field of board) {
+      if (fields[field[1]][field[0]] === token) {
+        if (board.length - 1 >= i + count && fields[board[i + count][1]][board[i + count][0]] !== token) {
+          result.push(i + count)
+        }
+      }
+      ++i
+    }
+    return result
+  }
+
   public checkWiner(): number {
     const fields = this.getState().filds
     let playerID = 0
@@ -484,11 +520,13 @@ export default class Game extends React.Component<{}, IGameState> {
         <div className={'bg-' + Colors[this.getState().token]}>
           Player {this.getState().token} - {Colors[this.getState().token].toUpperCase()}</div>
         <div>Dice: {this.getState().dice.state}</div>
-        <button onClick={this.noMoves.bind(this, this)} hidden={Boolean(actions.length)}>
+        <button onClick={this.noMoves.bind(this, this)} hidden={Boolean(actions.length)}
+          disabled={this.state.playerList[this.state.token] !== PlayerType.Human}>
           No moves
         </button>
         {actions.map(action => (
-          <button key={'a' + action[1] + '-' + action[0]} onClick={this.onClick.bind(this, action[1], action[0])}>
+          <button key={'a' + action[1] + '-' + action[0]} onClick={this.onClick.bind(this, action[1], action[0])}
+            disabled={this.state.playerList[this.state.token] !== PlayerType.Human}>
             {action[1]} {action[0]}
           </button>
         ))}
