@@ -17,7 +17,8 @@ export interface IGameState {
   winner: number,
   players: IPlayer[],
   playerList: PlayerType[],
-  movesCount: number
+  movesCount: number,
+  time: number
 }
 
 export enum PlayerType {
@@ -75,7 +76,8 @@ export default class Game extends React.Component<{}, IGameState> {
         dice: new Dice(game.getState().dice),
         filds: game.getState().filds.map(p => p.map(f => f)),
         players: game.getState().players.map(p => p),
-        playerList: game.getState().playerList.map(p => p)
+        playerList: game.getState().playerList.map(p => p),
+        time: game.getState().time
       }
       this.symulation = true
       this.stopGame = true
@@ -91,6 +93,7 @@ export default class Game extends React.Component<{}, IGameState> {
       ]
       const players: IPlayer[] = this.getPlayers(playerList)
       this.state = {
+        time: 50,
         movesCount: 0,
         winner: 0,
         token: 1,
@@ -152,7 +155,7 @@ export default class Game extends React.Component<{}, IGameState> {
 
   public startGame(this: Game) {
     this.stopGame = false
-    setTimeout(() => this.getPlayer(this.getState().token).play(this), 50)
+    setTimeout(() => this.getPlayer(this.getState().token).play(this), this.getState().time)
   }
 
   public getPlayers(playerList: PlayerType[]): IPlayer[] {
@@ -286,7 +289,7 @@ export default class Game extends React.Component<{}, IGameState> {
         const token = this.nextToken(this)
         const movesCount = this.getState().movesCount + 1
         this.setState({ token, movesCount })
-        setTimeout(() => this.getPlayer(token).play(this), 50)
+        setTimeout(() => this.getPlayer(token).play(this), this.getState().time)
       }
     }
   }
@@ -485,9 +488,17 @@ export default class Game extends React.Component<{}, IGameState> {
           <button onClick={this.startGame.bind(this, this)} disabled={playersCount === 4}>
             Start Game
           </button>
+          {this.state.time}
+          <input type='range' id='playerDelay' value={this.state.time} min='0' max='100'
+            // tslint:disable-next-line:jsx-no-bind
+            onChange={this.handleChangeDelay.bind(this)} />
         </div>
       </div>
     )
+  }
+
+  public handleChangeDelay(event) {
+    this.setState({time: event.target.value})
   }
 
   public render() {
