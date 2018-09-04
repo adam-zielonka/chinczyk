@@ -526,6 +526,17 @@ export default class Game extends React.Component<{}, IGameState> {
       </div>
     )
 
+    const stats2 = (
+      <span>
+        {this.state.movesCount};
+        {this.state.players.map(player => player ? (
+          <span key={'player' + player.id}>
+            {this.state.playerList[player.id]};{this.complateProcentT(player.id)};
+          </span>
+        ) : '')}
+      </span>
+    )
+
     const gameInfo = !winner ? (
       <div className='game-info'>
         <div>
@@ -553,6 +564,7 @@ export default class Game extends React.Component<{}, IGameState> {
         </div>
         <div className={'bg-' + Colors[winner]}>Winner: Player {winner} - {Colors[winner].toUpperCase()}</div>
         <div>{stats}</div>
+        <div>{stats2}</div>
       </div>
     )
 
