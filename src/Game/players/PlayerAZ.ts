@@ -49,8 +49,8 @@ export default class PlayerAZ extends Player {
       return 0
     })
 
-    console.log(stones)
-    console.log(destruction)
+    // console.log(stones)
+    // console.log(destruction)
 
     for (let n = 0; n < stones.length; ++n) {
       for (let k = 1; k <= destruction[n]; ++k) {
@@ -91,7 +91,7 @@ export default class PlayerAZ extends Player {
       }
       ++i
     }
-    console.log(points)
+    // console.log(points)
     return selectedAction
   }
 
@@ -108,7 +108,7 @@ export default class PlayerAZ extends Player {
       }
       ++i
     }
-    console.log(points)
+    // console.log(points)
     if (!point) {
       return selectedAction
     } else {
@@ -129,9 +129,9 @@ export default class PlayerAZ extends Player {
         game.onClick(actions[0][1], actions[0][0])
         break
       default:
-        console.log('AZ')
+        // console.log('AZ')
         const [result, board] = this.fieldsOfDestruction(game)
-        console.log(result)
+        // console.log(result)
         let selectedAction = this.selectBestAction(result, metaResult)
         const dangerAction = this.selectDangerAction(result, metaStart)
         if (dangerAction) {

@@ -81,7 +81,7 @@ export default class PlayerMCTS extends Player {
     // console.log(tree)
     // tree.print()
     const winnerNode = tree.root.getChildWithMaxScore()
-    tree.root.printPoints()
+    // tree.root.printPoints()
     tree.root = winnerNode
     return winnerNode.state.action
   }
@@ -91,15 +91,15 @@ export default class PlayerMCTS extends Player {
     const actions = game.posibleActions()
     switch (actions.length) {
       case 0:
-        console.log('MCTS OFF ' + round(game.complateProcent() * 100, 2) + '%')
+        // console.log('MCTS OFF ' + round(game.complateProcent() * 100, 2) + '%')
         game.noMoves()
         break
       case 1:
-        console.log('MCTS OFF ' + round(game.complateProcent() * 100, 2) + '%')
+        // console.log('MCTS OFF ' + round(game.complateProcent() * 100, 2) + '%')
         game.onClick(actions[0][1], actions[0][0])
         break
       default:
-        console.log('--MCTS-- ' + round(game.complateProcent() * 100, 2) + '%')
+        // console.log('--MCTS-- ' + round(game.complateProcent() * 100, 2) + '%')
         const result = this.getResult(game)
         if (result) {
           game.onClick(result[1], result[0])

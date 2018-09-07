@@ -18,7 +18,8 @@ export interface IGameState {
   players: IPlayer[],
   playerList: PlayerType[],
   movesCount: number,
-  time: number
+  time: number,
+  autoCounter: number
 }
 
 export enum PlayerType {
@@ -49,6 +50,24 @@ export default class Game extends React.Component<{}, IGameState> {
   double: boolean
   counter: number
   diceMove: boolean
+  automatI
+  automatB: boolean
+
+  public * automat() {
+    // let n = 0
+    for (let i = 2; i < 7 ; ++i) {
+      for (let j = 2; j < 7 ; ++j) {
+        for (let k = 2; k < 7 ; ++k) {
+          if (i !== j && j !== k && k !== i) {
+            for (let l = 0; l < 10 ; ++l) {
+              // console.log(++n + ' : ' + PlayersTypes[i] + ' vs. ' + PlayersTypes[j] + ' vs. ' + PlayersTypes[k])
+              yield [, PlayersTypes[i], PlayersTypes[j], PlayersTypes[i], PlayersTypes[k]]
+            }
+          }
+        }
+      }
+    }
+  }
 
   public setState(state: any) {
     if (this.symulation) {
@@ -68,6 +87,10 @@ export default class Game extends React.Component<{}, IGameState> {
 
   constructor(game?: Game) {
     super(game)
+    if (!this.automatI) {
+      this.automatI = this.automat()
+    }
+    this.automatB = false
     if (game instanceof Game) {
       this.symulationState = {
         movesCount: game.getState().token,
@@ -77,7 +100,8 @@ export default class Game extends React.Component<{}, IGameState> {
         filds: game.getState().filds.map(p => p.map(f => f)),
         players: game.getState().players.map(p => p),
         playerList: game.getState().playerList.map(p => p),
-        time: game.getState().time
+        time: game.getState().time,
+        autoCounter: game.getState().autoCounter
       }
       this.symulation = true
       this.stopGame = true
@@ -93,6 +117,7 @@ export default class Game extends React.Component<{}, IGameState> {
       ]
       const players: IPlayer[] = this.getPlayers(playerList)
       this.state = {
+        autoCounter: 0,
         time: 50,
         movesCount: 0,
         winner: 0,
@@ -156,6 +181,24 @@ export default class Game extends React.Component<{}, IGameState> {
   public startGame(this: Game) {
     this.stopGame = false
     setTimeout(() => this.getPlayer(this.getState().token).play(this), this.getState().time)
+  }
+
+  public autoPlay(this: Game) {
+    this.automatB = true
+    let line = `${this.state.movesCount};`
+    this.state.players.forEach(player => player ?
+      line += `${this.state.playerList[player.id]};${this.complateProcentT(player.id)}`
+    : null)
+    console.log(line)
+    const players = this.automatI.next().value
+    // console.log(players)
+    if (players) {
+      this.setState({ playerList : players, time: 0, autoCounter: this.state.autoCounter + 1 })
+      this.newGame()
+      this.startGame()
+    } else {
+      this.automatB = false
+    }
   }
 
   public getPlayers(playerList: PlayerType[]): IPlayer[] {
@@ -279,14 +322,17 @@ export default class Game extends React.Component<{}, IGameState> {
     return token
   }
 
-  public nextPlayer(this) {
+  public nextPlayer(this: Game) {
     const winner = this.checkWiner()
     if (winner) {
-      this.setState({ winner })
+      if (!this.getState().winner) {
+        this.setState({ winner })
+        if (this.automatB) { this.autoPlay() }
+      }
     } else {
       if (!this.symulation && !this.stopGame) {
         this.getState().dice.throw()
-        const token = this.nextToken(this)
+        const token = this.nextToken()
         const movesCount = this.getState().movesCount + 1
         this.setState({ token, movesCount })
         setTimeout(() => this.getPlayer(token).play(this), this.getState().time)
@@ -488,6 +534,9 @@ export default class Game extends React.Component<{}, IGameState> {
           <button onClick={this.startGame.bind(this, this)} disabled={playersCount === 4}>
             Start Game
           </button>
+          <button onClick={this.autoPlay.bind(this, this)}>
+            AutoPlay
+          </button>
           {this.state.time}
           <input type='range' id='playerDelay' value={this.state.time} min='0' max='100'
             // tslint:disable-next-line:jsx-no-bind
@@ -540,6 +589,9 @@ export default class Game extends React.Component<{}, IGameState> {
     const gameInfo = !winner ? (
       <div className='game-info'>
         <div>
+          AuotPlay: {this.state.autoCounter}
+        </div>
+        <div>
           Moves: {this.state.movesCount}
         </div>
         <div className={'bg-' + Colors[this.getState().token]}>
@@ -559,6 +611,9 @@ export default class Game extends React.Component<{}, IGameState> {
       </div>
     ) : (
       <div className='game-info'>
+        <div>
+          AuotPlay: {this.state.autoCounter}
+        </div>
         <div>
           Moves: {this.state.movesCount}
         </div>
