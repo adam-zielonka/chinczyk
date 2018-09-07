@@ -69,6 +69,20 @@ export default class Game extends React.Component<{}, IGameState> {
     }
   }
 
+  public * automat2() {
+    // let n = 0
+    for (let i = 2; i < 7 ; ++i) {
+      for (let j = 2; j < 7 ; ++j) {
+          if (i !== j) {
+            for (let l = 0; l < 10 ; ++l) {
+              // console.log(++n + ' : ' + PlayersTypes[i] + ' vs. ' + PlayersTypes[j] + ' vs. ' + PlayersTypes[k])
+              yield [, PlayersTypes[i], PlayerType.None, PlayersTypes[j], PlayerType.None]
+            }
+          }
+      }
+    }
+  }
+
   public setState(state: any) {
     if (this.symulation) {
       this.symulationState = {...this.symulationState, ...state}
@@ -187,15 +201,17 @@ export default class Game extends React.Component<{}, IGameState> {
     this.automatB = true
     let line = `${this.state.movesCount};`
     this.state.players.forEach(player => player ?
-      line += `${this.state.playerList[player.id]};${this.complateProcentT(player.id)}`
+      line += `${this.state.playerList[player.id]};${this.complateProcentT(player.id)};`
     : null)
     console.log(line)
     const players = this.automatI.next().value
     // console.log(players)
     if (players) {
       this.setState({ playerList : players, time: 0, autoCounter: this.state.autoCounter + 1 })
-      this.newGame()
-      this.startGame()
+      setTimeout(() => {
+        this.newGame()
+        this.startGame()
+      }, this.getState().time)
     } else {
       this.automatB = false
     }
@@ -589,7 +605,7 @@ export default class Game extends React.Component<{}, IGameState> {
     const gameInfo = !winner ? (
       <div className='game-info'>
         <div>
-          AuotPlay: {this.state.autoCounter}
+          AutoPlay: {this.state.autoCounter}
         </div>
         <div>
           Moves: {this.state.movesCount}
@@ -612,7 +628,7 @@ export default class Game extends React.Component<{}, IGameState> {
     ) : (
       <div className='game-info'>
         <div>
-          AuotPlay: {this.state.autoCounter}
+          AutoPlay: {this.state.autoCounter}
         </div>
         <div>
           Moves: {this.state.movesCount}
