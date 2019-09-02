@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Colors } from './Consts'
 
-interface ISquareProps {
+type Props = {
   color: number
   activeColor: number
   disabled: boolean
@@ -11,14 +11,17 @@ interface ISquareProps {
   onClick(): void
 }
 
-export default function Square(props: ISquareProps) {
-const color = (props.color === undefined ? '' : 'bg-' + Colors[props.color])
-const stone = (<div className={'p-' + Colors[props.activeColor]}>&#11044;</div>)
-const numbers = '' // (<div className='numbers'>{props.x} {props.y}</div>)
-return (
-    <button className={'square ' + (color)} onClick={props.onClick} disabled={props.disabled}>
-      {props.activeColor ? stone : props.color !== undefined ? numbers : ''}
-      {/* {props.color !== undefined ? numbers : ''} */}
-    </button>
-)
+const Square: React.FC<Props> = ({ color, activeColor, disabled, player, x, y, onClick }) => {
+  const bgColorClass = color === undefined ? '' : 'bg-' + Colors[color]
+
+  return <button className={'square ' + bgColorClass} disabled={disabled} onClick={onClick}>
+    {activeColor ? <Stone color={activeColor} /> :
+      // color !== undefined ? <Numbers x={x} y={y} /> :
+        ''}
+  </button>
 }
+
+export default Square
+
+const Stone: React.FC<{ color: number }> = ({ color }) => <div className={'p-' + Colors[color]}>&#11044;</div>
+const Numbers: React.FC<{ x: number, y: number }> = ({ x, y }) => <div className='numbers'>{x} {y}</div>
