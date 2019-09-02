@@ -1,12 +1,9 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import React from 'react'
+import ReactDOM from 'react-dom'
 import './index.css'
-import registerServiceWorker from './registerServiceWorker'
-
+import * as serviceWorker from './serviceWorker'
 import Game from './Game/Game'
 
-ReactDOM.render(
-  <Game />,
-  document.getElementById('root') as HTMLElement
-)
-registerServiceWorker()
+ReactDOM.render(<Game />, document.getElementById('root'))
+
+serviceWorker.unregister()
