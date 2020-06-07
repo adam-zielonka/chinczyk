@@ -24,4 +24,4 @@ const Square: React.FC<Props> = ({ color, activeColor, disabled, player, x, y, o
 export default Square
 
 const Stone: React.FC<{ color: number }> = ({ color }) => <div className={'p-' + Colors[color]}>&#11044;</div>
-const Numbers: React.FC<{ x: number, y: number }> = ({ x, y }) => <div className='numbers'>{x} {y}</div>
+// const Numbers: React.FC<{ x: number, y: number }> = ({ x, y }) => <div className='numbers'>{x} {y}</div>

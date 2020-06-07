@@ -11,7 +11,7 @@ export default class PlayerAZ extends Player {
   fieldsOfDestruction(game: Game) {
     const fields = game.getState().filds
     const token = game.getState().token
-    const count = game.getState().dice.state
+    // const count = game.getState().dice.state
     let board = []
     for (const id of PlayerFilds[token].order) {
       board = board.concat(PlayerFilds[id].board)
@@ -130,7 +130,7 @@ export default class PlayerAZ extends Player {
         break
       default:
         // console.log('AZ')
-        const [result, board] = this.fieldsOfDestruction(game)
+        const [result, /*board*/] = this.fieldsOfDestruction(game)
         // console.log(result)
         let selectedAction = this.selectBestAction(result, metaResult)
         const dangerAction = this.selectDangerAction(result, metaStart)

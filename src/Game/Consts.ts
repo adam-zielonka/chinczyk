@@ -1,3 +1,4 @@
+/* eslint-disable no-sparse-arrays */
 export const Colors = [
   'empty', 'green', 'yellow', 'red', 'blue'
 ]

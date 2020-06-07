@@ -1,3 +1,4 @@
+/* eslint-disable no-sparse-arrays */
 import * as React from 'react'
 import { Colors, Filds, PlayerFilds } from './Consts'
 import Dice from './Dice'
