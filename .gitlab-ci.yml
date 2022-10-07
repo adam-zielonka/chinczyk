@@ -1,5 +1,5 @@
 pages:
-  image: node:alpine
+  image: node:14.20.1
   script:
     - yarn
     - yarn build
@@ -13,4 +13,4 @@ pages:
     paths:
     - node_modules
   only:
-    - master
+    - main
