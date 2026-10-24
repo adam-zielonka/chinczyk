@@ -20,7 +20,7 @@
     "pnpm": ">=12 <13"
   },
   "devDependencies": {
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.5",
     "@types/react": "^16.14.70",
     "@types/react-dom": "^16.9.25",
     "@vitejs/plugin-react-swc": "^4.3.3",
