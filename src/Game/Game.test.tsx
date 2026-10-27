@@ -124,10 +124,9 @@ describe('player-facing game flow', () => {
 it('switches language during a match without changing pawns, dice or player choices', async () => {
   await act(async () => game.startGame());
   const before = JSON.stringify(game.state);
-  const picker = container.querySelector('.language-picker') as HTMLSelectElement;
+  const english = container.querySelector('footer button[lang="en"]') as HTMLButtonElement;
   await act(async () => {
-    picker.value = 'en';
-    picker.dispatchEvent(new Event('change', { bubbles: true }));
+    english.click();
   });
   expect(JSON.stringify(game.state)).toBe(before);
   expect(container.querySelector('#turn-title')?.textContent).toBe('Your turn. Roll the dice!');

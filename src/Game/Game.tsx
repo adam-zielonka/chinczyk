@@ -544,7 +544,6 @@ export default class Game extends React.Component<{}, IGameState> {
     return <div className={`app-shell ${started ? 'is-playing' : 'is-setup'}`}>
       <header className="site-header">
         <a href="." className="brand" aria-label={t("Chińczyk — strona główna")}><span className="brand-mark" aria-hidden="true">⚄</span><span>{t("chińczyk")}<span className="brand-period">.</span></span></a>
-        <select className="language-picker" aria-label="Język / Language" value={language} onChange={event => setLanguage(event.target.value as "pl" | "en")}><option value="pl">Polski</option><option value="en">English</option></select>
         <span className="header-note">{t("Klasyczna gra. Dobre towarzystwo.")}</span>
         <a className="rules-link" href="#zasady"><span className="info-icon" aria-hidden="true">i</span> {" "}{t("Jak grać")}</a>
       </header>
@@ -582,7 +581,12 @@ export default class Game extends React.Component<{}, IGameState> {
         </div>
         <section className="rules-section" id="zasady"><div className="rules-title"><span className="eyebrow">{t("MINUTA I JUŻ GRASZ")}</span><h2>{t("Małe przypomnienie zasad")}</h2></div><div className="rule"><span>01</span><div><h3>{t("Szóstka na dobry początek")}</h3><p>{t("Wyrzuć 6, żeby wyprowadzić pionek z bazy. Gdy wszystkie są w bazie, masz do trzech prób.")}</p></div></div><div className="rule"><span>02</span><div><h3>{t("Ścigaj się i zbijaj")}</h3><p>{t("Ruszaj po torze. Wejście na pole rywala odsyła jego pionek do bazy.")}</p></div></div><div className="rule"><span>03</span><div><h3>{t("Wszyscy do domu")}</h3><p>{t("Wprowadź cztery pionki na kolorową metę. Potrzebujesz dokładnego rzutu.")}</p></div></div></section>
       </main>
-      <footer><span>{t("chińczyk.")}{" "}<span className="footer-note">{t("Dobry ruch na wolną chwilę.")}</span></span><span>{t("Miłej gry")}{" "}<span aria-hidden="true">✦</span></span></footer>
+      <footer><span>{t("chińczyk.")}{" "}<span className="footer-note">{t("Dobry ruch na wolną chwilę.")}</span></span><div className="language-switch" role="group" aria-label="Language / Język">
+  <button type="button" lang="en" aria-pressed={language === "en"} onClick={() => setLanguage("en")}>English</button>
+  <span aria-hidden="true">/</span>
+  <button type="button" lang="pl" aria-pressed={language === "pl"} onClick={() => setLanguage("pl")}>Polski</button>
+</div>
+<span>{t("Miłej gry")}{" "}<span aria-hidden="true">✦</span></span></footer>
     </div>
   }
 
