@@ -3,6 +3,7 @@ import React, { act, createRef } from 'react'
 import { createRoot, Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Game from './Game'
+import { setLanguage } from '../i18n'
 import { PlayerType } from './PlayerProfiles'
 import { PlayerFilds } from './Consts'
 
@@ -14,6 +15,7 @@ let game: Game
 const button = (text: string) => [...container.querySelectorAll('button')].find(element => element.textContent.includes(text))!
 
 beforeEach(async () => {
+  setLanguage("pl")
   vi.useFakeTimers()
   vi.spyOn(Math, 'random').mockReturnValue(0)
   container = document.createElement('div')
@@ -84,11 +86,11 @@ describe('player-facing game flow', () => {
 
   it('keeps player choices fixed during a match and unlocks them for the next one', async () => {
     await act(async () => game.startGame())
-    expect([...container.querySelectorAll('select')].every(select => select.disabled)).toBe(true)
+    expect([...container.querySelectorAll<HTMLSelectElement>('.player-list select')].every(select => select.disabled)).toBe(true)
     await act(async () => game.setPlayerType(1, PlayerType.None))
     expect(game.state.playerList[1]).toBe(PlayerType.Human)
     await act(async () => game.newGame())
-    expect([...container.querySelectorAll('select')].every(select => !select.disabled)).toBe(true)
+    expect([...container.querySelectorAll<HTMLSelectElement>('.player-list select')].every(select => !select.disabled)).toBe(true)
   })
 
   it('finishes a match between the new opponents while preserving all pieces and skipping empty seats', async () => {
@@ -118,3 +120,18 @@ describe('player-facing game flow', () => {
   })
 
 })
+
+it('switches language during a match without changing pawns, dice or player choices', async () => {
+  await act(async () => game.startGame());
+  const before = JSON.stringify(game.state);
+  const picker = container.querySelector('.language-picker') as HTMLSelectElement;
+  await act(async () => {
+    picker.value = 'en';
+    picker.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  expect(JSON.stringify(game.state)).toBe(before);
+  expect(container.querySelector('#turn-title')?.textContent).toBe('Your turn. Roll the dice!');
+  expect(container.querySelector('#player-1')?.textContent).toContain('You · local player');
+  expect(localStorage.getItem('chinczyk-language')).toBe('en');
+  expect(document.documentElement.lang).toBe('en');
+});

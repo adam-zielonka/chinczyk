@@ -1,3 +1,4 @@
+import { t, language, setLanguage, subscribe } from "../i18n"
 /* eslint-disable no-sparse-arrays */
 import * as React from 'react'
 import { Colors, Filds, PlayerFilds } from './Consts'
@@ -38,7 +39,14 @@ export default class Game extends React.Component<{}, IGameState> {
   diceMove: boolean
   private turnTimer: ReturnType<typeof setTimeout>
 
+  private unsubscribeLanguage?: () => void
+
+  componentDidMount() {
+    this.unsubscribeLanguage = subscribe(() => this.forceUpdate())
+  }
+
   componentWillUnmount() {
+    this.unsubscribeLanguage?.()
     this.stop()
   }
 
@@ -498,28 +506,28 @@ export default class Game extends React.Component<{}, IGameState> {
 
   private renderPlayers() {
     return <aside className="players-panel panel" aria-labelledby="players-title">
-      <div className="section-heading"><span className="eyebrow">DOBRE TOWARZYSTWO</span><span className="small-dots">● ● ● ●</span></div>
-      <h2 id="players-title">Kto siada do stołu?</h2>
-      <p className="section-description">Zaproś znajomych na jeden ekran albo poznaj naszych graczy.</p>
+      <div className="section-heading"><span className="eyebrow">{t("DOBRE TOWARZYSTWO")}</span><span className="small-dots">● ● ● ●</span></div>
+      <h2 id="players-title">{t("Kto siada do stołu?")}</h2>
+      <p className="section-description">{t("Zaproś znajomych na jeden ekran albo poznaj naszych graczy.")}</p>
       <div className="player-list">{[1, 2, 3, 4].map(id => {
         const type = this.state.playerList[id]
         const profile = PlayerProfiles[type]
         const active = this.state.started && !this.state.winner && this.state.token === id
         return <div key={id} className={`player-card color-${Colors[id]} ${active ? 'is-current' : ''} ${type === PlayerType.None ? 'is-empty' : ''}`}>
-          <div className="player-card-top"><span className="avatar">{profile.initial}</span>
-            <div><span className="player-color">{ColorNames[id]}</span><span className="player-badge">{active ? 'Teraz gra' : profile.badge}</span></div>
-            {this.state.started && <span className="home-count" title="Pionki na mecie">{this.finishedCount(id)}<span> / 4</span></span>}
+          <div className="player-card-top"><span className="avatar">{t(profile.initial)}</span>
+            <div><span className="player-color">{t(ColorNames[id])}</span><span className="player-badge">{active ? t("Teraz gra") : t(profile.badge)}</span></div>
+            {this.state.started && <span className="home-count" title={t("Pionki na mecie")}>{this.finishedCount(id)}<span> / 4</span></span>}
           </div>
-          <label className="sr-only" htmlFor={`player-${id}`}>Gracz: {ColorNames[id]}</label>
+          <label className="sr-only" htmlFor={`player-${id}`}>{t("Gracz:")}{" "}{t(ColorNames[id])}</label>
           <select id={`player-${id}`} value={type} disabled={this.state.started}
             onChange={event => this.setPlayerType(id, event.target.value as PlayerType)}>
-            {PlayersTypes.map(player => <option key={player} value={player}>{PlayerProfiles[player].name}</option>)}
+            {PlayersTypes.map(player => <option key={player} value={player}>{t(PlayerProfiles[player].name)}</option>)}
           </select>
-          <p>{profile.description}</p>
-          {this.state.started && type !== PlayerType.None && <div className="progress-track" aria-label={`Postęp: ${ColorNames[id]}`}><span style={{ width: `${Math.min(100, this.complateProcentT(id) * 100)}%` }} /></div>}
+          <p>{t(profile.description)}</p>
+          {this.state.started && type !== PlayerType.None && <div className="progress-track" aria-label={t("Postęp: {color}", { color: t(ColorNames[id]) })}><span style={{ width: `${Math.min(100, this.complateProcentT(id) * 100)}%` }} /></div>}
         </div>
       })}</div>
-      <div className="local-note"><span aria-hidden="true">⌂</span><span>Razem przy jednym ekranie.<br/>Bez konta i bez pośpiechu.</span></div>
+      <div className="local-note"><span aria-hidden="true">⌂</span><span>{t("Razem przy jednym ekranie.")}<br/>{t("Bez konta i bez pośpiechu.")}</span></div>
     </aside>
   }
 
@@ -531,22 +539,23 @@ export default class Game extends React.Component<{}, IGameState> {
     const canMove = human && !awaitingRoll
     const playerCount = state.players.filter(Boolean).length
     const profile = PlayerProfiles[state.playerList[token]]
-    const statusTitle = winner ? `${ColorNames[winner]} wygrywają!` : !started ? 'Wszystko gotowe do gry?' : paused ? 'Chwila oddechu' : human ? (awaitingRoll ? 'Twoja kolej. Rzuć kostką!' : actions.length ? 'Wybierz swój pionek' : 'Tym razem bez ruchu') : `${profile.name.split(' · ')[0]} wykonuje ruch…`
-    const statusDescription = winner ? 'Cztery pionki na mecie. Pora na rewanż?' : !started ? 'Wybierz towarzystwo i rozpocznij pierwszą rundę.' : paused ? 'Plansza poczeka. Wznów, kiedy zechcesz.' : human ? (awaitingRoll ? 'Zobaczmy, co przyniesie los.' : actions.length ? 'Podświetlone pionki mogą ruszyć. Kliknij jeden z nich.' : 'Nie masz dostępnych ruchów. Przekaż kostkę dalej.') : 'Za moment kostka trafi do kolejnego gracza.'
+    const statusTitle = winner ? t("{color} wygrywają!", { color: t(ColorNames[winner]) }) : !started ? t("Wszystko gotowe do gry?") : paused ? t("Chwila oddechu") : human ? (awaitingRoll ? t("Twoja kolej. Rzuć kostką!") : actions.length ? t("Wybierz swój pionek") : t("Tym razem bez ruchu")) : t("{name} wykonuje ruch…", { name: t(profile.name).split(" · ")[0] })
+    const statusDescription = winner ? t("Cztery pionki na mecie. Pora na rewanż?") : !started ? t("Wybierz towarzystwo i rozpocznij pierwszą rundę.") : paused ? t("Plansza poczeka. Wznów, kiedy zechcesz.") : human ? (awaitingRoll ? t("Zobaczmy, co przyniesie los.") : actions.length ? t("Podświetlone pionki mogą ruszyć. Kliknij jeden z nich.") : t("Nie masz dostępnych ruchów. Przekaż kostkę dalej.")) : t("Za moment kostka trafi do kolejnego gracza.")
     return <div className={`app-shell ${started ? 'is-playing' : 'is-setup'}`}>
       <header className="site-header">
-        <a href="." className="brand" aria-label="Chińczyk — strona główna"><span className="brand-mark" aria-hidden="true">⚄</span><span>chińczyk<span className="brand-period">.</span></span></a>
-        <span className="header-note">Klasyczna gra. Dobre towarzystwo.</span>
-        <a className="rules-link" href="#zasady"><span className="info-icon" aria-hidden="true">i</span> Jak grać</a>
+        <a href="." className="brand" aria-label={t("Chińczyk — strona główna")}><span className="brand-mark" aria-hidden="true">⚄</span><span>{t("chińczyk")}<span className="brand-period">.</span></span></a>
+        <select className="language-picker" aria-label="Język / Language" value={language} onChange={event => setLanguage(event.target.value as "pl" | "en")}><option value="pl">Polski</option><option value="en">English</option></select>
+        <span className="header-note">{t("Klasyczna gra. Dobre towarzystwo.")}</span>
+        <a className="rules-link" href="#zasady"><span className="info-icon" aria-hidden="true">i</span> {" "}{t("Jak grać")}</a>
       </header>
       <main>
-        <div className="intro"><div><span className="eyebrow">ODŁÓŻ SPRAWY. RZUĆ KOSTKĄ.</span><h1>Spotkajmy się przy planszy<span>.</span></h1><p>Trochę szczęścia, odrobina strategii i jeszcze jedna partia.</p></div><span className="table-tag"><span/> 2–4 graczy · na jednym ekranie</span></div>
+        <div className="intro"><div><span className="eyebrow">{t("ODŁÓŻ SPRAWY. RZUĆ KOSTKĄ.")}</span><h1>{t("Spotkajmy się przy planszy")}<span>.</span></h1><p>{t("Trochę szczęścia, odrobina strategii i jeszcze jedna partia.")}</p></div><span className="table-tag"><span/> {" "}{t("2–4 graczy · na jednym ekranie")}</span></div>
         <div className="game-layout">
           {this.renderPlayers()}
-          <section className="board-panel panel" aria-label="Plansza do gry w chińczyka">
-            <div className="board-heading"><div className="board-label"><span className={`status-dot ${started && !paused && !winner ? 'live' : ''}`}/>{winner ? 'Koniec partii' : !started ? 'Twój stół do gry' : paused ? 'Gra wstrzymana' : 'Partia w toku'}</div><span className="round-label">{started ? `Ruch ${state.movesCount + 1}` : `Zaczynają ${ColorNames[state.players.find(Boolean)?.id || 1].toLowerCase()}`}</span></div>
+          <section className="board-panel panel" aria-label={t("Plansza do gry w chińczyka")}>
+            <div className="board-heading"><div className="board-label"><span className={`status-dot ${started && !paused && !winner ? 'live' : ''}`}/>{winner ? t("Koniec partii") : !started ? t("Twój stół do gry") : paused ? t("Gra wstrzymana") : t("Partia w toku")}</div><span className="round-label">{started ? t("Ruch {count}", { count: state.movesCount + 1 }) : t("Zaczynają {color}", { color: t(ColorNames[state.players.find(Boolean)?.id || 1]).toLowerCase() })}</span></div>
             <div className="board-wrap"><div className="game-board">
-              {[3, 4, 2, 1].map(id => <div key={id} aria-hidden="true" className={`base-zone base-${id} color-${Colors[id]}`}><span>{ColorNames[id]}</span><small>BAZA</small></div>)}
+              {[3, 4, 2, 1].map(id => <div key={id} aria-hidden="true" className={`base-zone base-${id} color-${Colors[id]}`}><span>{t(ColorNames[id])}</span><small>{t("BAZA")}</small></div>)}
               {Array.from({ length: 11 }, (_, y) => Array.from({ length: 11 }, (_, x) => {
                 const color = Filds[y][x]
                 const movable = canMove && actions.some(action => action[0] === x && action[1] === y)
@@ -555,25 +564,25 @@ export default class Game extends React.Component<{}, IGameState> {
               }))}
               <div className="board-center" aria-hidden="true">✦</div>
             </div></div>
-            <div className="board-caption"><span><i className="legend-pawn"/> Cztery pionki. Jeden cel.</span><span>Doprowadź je do domu.</span></div>
+            <div className="board-caption"><span><i className="legend-pawn"/> {" "}{t("Cztery pionki. Jeden cel.")}</span><span>{t("Doprowadź je do domu.")}</span></div>
           </section>
           <aside className="turn-panel">
             <section className={`turn-card panel ${started ? 'color-' + Colors[winner || token] : ''}`} aria-labelledby="turn-title">
-              <span className="eyebrow">{winner ? 'MAMY ZWYCIĘZCĘ' : started ? ColorNames[token].toUpperCase() + ' PRZY KOSTCE' : 'TWOJA NASTĘPNA PARTIA'}</span>
+              <span className="eyebrow">{winner ? t("MAMY ZWYCIĘZCĘ") : started ? t("{color} PRZY KOSTCE", { color: t(ColorNames[token]).toUpperCase() }) : t("TWOJA NASTĘPNA PARTIA")}</span>
               <h2 id="turn-title" aria-live="polite">{statusTitle}</h2><p className="turn-description">{statusDescription}</p>
-              <div className={`dice-stage ${!started || (human && awaitingRoll) ? 'dice-waiting' : ''}`}><div className="dice" role="img" aria-label={!started || (human && awaitingRoll) ? 'Kostka czeka na rzut' : `Kostka: ${state.dice.state}`}>
+              <div className={`dice-stage ${!started || (human && awaitingRoll) ? 'dice-waiting' : ''}`}><div className="dice" role="img" aria-label={!started || (human && awaitingRoll) ? t("Kostka czeka na rzut") : t("Kostka: {value}", { value: state.dice.state })}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(dot => <i key={dot} className={this.diceDots(!started || (human && awaitingRoll) ? 5 : state.dice.state).includes(dot) ? 'dot visible' : 'dot'}/>)}
-              </div><span>{winner ? 'Dobra partia!' : !started ? 'Wszystko zaczyna się od rzutu' : human && awaitingRoll ? 'Twój szczęśliwy rzut?' : `Na kostce: ${state.dice.state}`}</span></div>
-              {!started ? <><button className="button primary" disabled={playerCount < 2} onClick={() => this.startGame()}>Zagrajmy <span aria-hidden="true">↗</span></button>{playerCount < 2 && <p className="validation-note" role="status">Wybierz co najmniej dwóch graczy.</p>}</> : winner ? <button className="button primary" onClick={() => this.newGame()}>Zagraj jeszcze raz <span aria-hidden="true">↻</span></button> : paused ? <button className="button primary" onClick={() => this.startGame()}>Wznów grę <span aria-hidden="true">▶</span></button> : human ? <button className="button primary" disabled={!awaitingRoll && actions.length > 0} onClick={() => awaitingRoll ? this.rollDice() : this.noMoves()}>{awaitingRoll ? 'Rzuć kostką' : actions.length ? 'Wybierz pionek na planszy' : 'Przekaż kolejkę'} <span aria-hidden="true">{awaitingRoll ? '⚄' : '→'}</span></button> : <div className="thinking" role="status"><span/> Przeciwnik gra</div>}
-              {started && !winner && <div className="game-controls">{!paused && <button onClick={() => this.pauseGame()}>Ⅱ Pauza</button>}<button onClick={() => this.newGame()}>↻ Nowa partia</button></div>}
+              </div><span>{winner ? t("Dobra partia!") : !started ? t("Wszystko zaczyna się od rzutu") : human && awaitingRoll ? t("Twój szczęśliwy rzut?") : t("Na kostce: {value}", { value: state.dice.state })}</span></div>
+              {!started ? <><button className="button primary" disabled={playerCount < 2} onClick={() => this.startGame()}>{t("Zagrajmy")}{" "}<span aria-hidden="true">↗</span></button>{playerCount < 2 && <p className="validation-note" role="status">{t("Wybierz co najmniej dwóch graczy.")}</p>}</> : winner ? <button className="button primary" onClick={() => this.newGame()}>{t("Zagraj jeszcze raz")}{" "}<span aria-hidden="true">↻</span></button> : paused ? <button className="button primary" onClick={() => this.startGame()}>{t("Wznów grę")}{" "}<span aria-hidden="true">▶</span></button> : human ? <button className="button primary" disabled={!awaitingRoll && actions.length > 0} onClick={() => awaitingRoll ? this.rollDice() : this.noMoves()}>{awaitingRoll ? t("Rzuć kostką") : actions.length ? t("Wybierz pionek na planszy") : t("Przekaż kolejkę")} <span aria-hidden="true">{awaitingRoll ? '⚄' : '→'}</span></button> : <div className="thinking" role="status"><span/> {" "}{t("Przeciwnik gra")}</div>}
+              {started && !winner && <div className="game-controls">{!paused && <button onClick={() => this.pauseGame()}>{t("Ⅱ Pauza")}</button>}<button onClick={() => this.newGame()}>{t("↻ Nowa partia")}</button></div>}
             </section>
-            <section className="pace-card panel"><div><label htmlFor="playerDelay">Tempo gry</label><span>{state.time < 350 ? 'Szybkie' : state.time > 1000 ? 'Spokojne' : 'Swobodne'}</span></div><input type="range" id="playerDelay" min="150" max="1500" step="50" value={state.time} onChange={event => this.setState({ time: Number(event.target.value) })}/><p>Ustaw, jak szybko grają przeciwnicy.</p></section>
-            <div className="little-note"><span aria-hidden="true">✳</span><p>Szczęście sprzyja…<br/>tym, którzy rzucają.</p></div>
+            <section className="pace-card panel"><div><label htmlFor="playerDelay">{t("Tempo gry")}</label><span>{state.time < 350 ? t("Szybkie") : state.time > 1000 ? t("Spokojne") : t("Swobodne")}</span></div><input type="range" id="playerDelay" min="150" max="1500" step="50" value={state.time} onChange={event => this.setState({ time: Number(event.target.value) })}/><p>{t("Ustaw, jak szybko grają przeciwnicy.")}</p></section>
+            <div className="little-note"><span aria-hidden="true">✳</span><p>{t("Szczęście sprzyja…")}<br/>{t("tym, którzy rzucają.")}</p></div>
           </aside>
         </div>
-        <section className="rules-section" id="zasady"><div className="rules-title"><span className="eyebrow">MINUTA I JUŻ GRASZ</span><h2>Małe przypomnienie zasad</h2></div><div className="rule"><span>01</span><div><h3>Szóstka na dobry początek</h3><p>Wyrzuć 6, żeby wyprowadzić pionek z bazy. Gdy wszystkie są w bazie, masz do trzech prób.</p></div></div><div className="rule"><span>02</span><div><h3>Ścigaj się i zbijaj</h3><p>Ruszaj po torze. Wejście na pole rywala odsyła jego pionek do bazy.</p></div></div><div className="rule"><span>03</span><div><h3>Wszyscy do domu</h3><p>Wprowadź cztery pionki na kolorową metę. Potrzebujesz dokładnego rzutu.</p></div></div></section>
+        <section className="rules-section" id="zasady"><div className="rules-title"><span className="eyebrow">{t("MINUTA I JUŻ GRASZ")}</span><h2>{t("Małe przypomnienie zasad")}</h2></div><div className="rule"><span>01</span><div><h3>{t("Szóstka na dobry początek")}</h3><p>{t("Wyrzuć 6, żeby wyprowadzić pionek z bazy. Gdy wszystkie są w bazie, masz do trzech prób.")}</p></div></div><div className="rule"><span>02</span><div><h3>{t("Ścigaj się i zbijaj")}</h3><p>{t("Ruszaj po torze. Wejście na pole rywala odsyła jego pionek do bazy.")}</p></div></div><div className="rule"><span>03</span><div><h3>{t("Wszyscy do domu")}</h3><p>{t("Wprowadź cztery pionki na kolorową metę. Potrzebujesz dokładnego rzutu.")}</p></div></div></section>
       </main>
-      <footer><span>chińczyk. <span className="footer-note">Dobry ruch na wolną chwilę.</span></span><span>Miłej gry <span aria-hidden="true">✦</span></span></footer>
+      <footer><span>{t("chińczyk.")}{" "}<span className="footer-note">{t("Dobry ruch na wolną chwilę.")}</span></span><span>{t("Miłej gry")}{" "}<span aria-hidden="true">✦</span></span></footer>
     </div>
   }
 
