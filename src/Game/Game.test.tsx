@@ -6,6 +6,7 @@ import Game from './Game'
 import { setLanguage } from '../i18n'
 import { PlayerType } from './PlayerProfiles'
 import { PlayerFilds } from './Consts'
+import Square from './Square'
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 
@@ -42,8 +43,28 @@ describe('player-facing game flow', () => {
     await act(async () => (container.querySelector('.can-move') as HTMLButtonElement).click())
     const [x, y] = PlayerFilds[1].board[0]
     expect(game.state.filds[y][x]).toBe(1)
+    expect(container.querySelectorAll('.stone .player-symbol[data-player="1"]')).toHaveLength(4)
+    expect(container.querySelector(`button[aria-label*="rząd ${y + 1}, kolumna ${x + 1}"] .player-symbol`)?.getAttribute('data-player')).toBe('1')
+    expect(container.querySelectorAll('.bg-green > .player-symbol[data-player="1"]').length).toBeGreaterThan(4)
     expect(game.state.token).toBe(2)
     expect(container.querySelectorAll('.can-move')).toHaveLength(0)
+  })
+
+  it('keeps all four visible seat symbols consistent across profiles, pawns and the legend', async () => {
+    const original = [1, 2, 3, 4].map(id => container.querySelector(`.stone .player-symbol[data-player="${id}"]`)!.innerHTML)
+    expect(new Set(original).size).toBe(4)
+    await act(async () => game.setPlayerType(1, PlayerType.Hunter))
+    for (const id of [1, 2, 3, 4]) {
+      expect(container.querySelectorAll(`.stone .player-symbol[data-player="${id}"]`)).toHaveLength(4)
+      for (const symbol of container.querySelectorAll(`.player-symbol[data-player="${id}"]`)) {
+        expect(symbol.innerHTML).toBe(original[id - 1])
+      }
+      expect(container.querySelector(`.player-color .player-symbol[data-player="${id}"]`)).not.toBeNull()
+      expect(container.querySelector(`.base-${id} .player-symbol[data-player="${id}"]`)).not.toBeNull()
+    }
+    await act(async () => game.setPlayerType(1, PlayerType.None))
+    expect(container.querySelector('.stone .player-symbol[data-player="1"]')).toBeNull()
+    expect(container.querySelector('.player-color .player-symbol[data-player="1"]')?.innerHTML).toBe(original[0])
   })
 
   it('lets a human pass without a move and grants up to three initial attempts', async () => {
@@ -133,4 +154,13 @@ it('switches language during a match without changing pawns, dice or player choi
   expect(container.querySelector('#player-1')?.textContent).toContain('You · local player');
   expect(localStorage.getItem('chinczyk-language')).toBe('en');
   expect(document.documentElement.lang).toBe('en');
+});
+
+it('shows the pawn identity instead of the owner mark on an occupied field, including home', async () => {
+  for (const field of [0, 1, 2, 3, 4]) {
+    await act(async () => root.render(<Square color={field} activeColor={4} disabled movable={false} x={0} y={0} onClick={() => {}}/>))
+    expect(container.querySelectorAll('.player-symbol')).toHaveLength(1)
+    expect(container.querySelector('.stone .player-symbol')?.getAttribute('data-player')).toBe('4')
+    expect(container.querySelector('button')?.getAttribute('aria-label')).toContain('Niebiescy')
+  }
 });

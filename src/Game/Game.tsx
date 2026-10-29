@@ -11,6 +11,7 @@ import PlayerFirst from './players/PlayerFirst'
 import PlayerLast from './players/PlayerLast'
 import PlayerRandom from './players/PlayerRandom'
 import Square from './Square'
+import PlayerSymbol from './PlayerSymbol'
 import PlayerStrategic from './players/PlayerStrategic'
 import { PlayerType, PlayersTypes, PlayerProfiles, ColorNames } from './PlayerProfiles'
 export { PlayerType, PlayersTypes } from './PlayerProfiles'
@@ -515,7 +516,7 @@ export default class Game extends React.Component<{}, IGameState> {
         const active = this.state.started && !this.state.winner && this.state.token === id
         return <div key={id} className={`player-card color-${Colors[id]} ${active ? 'is-current' : ''} ${type === PlayerType.None ? 'is-empty' : ''}`}>
           <div className="player-card-top"><span className="avatar">{t(profile.initial)}</span>
-            <div><span className="player-color">{t(ColorNames[id])}</span><span className="player-badge">{active ? t("Teraz gra") : t(profile.badge)}</span></div>
+            <div><span className="player-color"><PlayerSymbol player={id}/>{t(ColorNames[id])}</span><span className="player-badge">{active ? t("Teraz gra") : t(profile.badge)}</span></div>
             {this.state.started && <span className="home-count" title={t("Pionki na mecie")}>{this.finishedCount(id)}<span> / 4</span></span>}
           </div>
           <label className="sr-only" htmlFor={`player-${id}`}>{t("Gracz:")}{" "}{t(ColorNames[id])}</label>
@@ -554,7 +555,7 @@ export default class Game extends React.Component<{}, IGameState> {
           <section className="board-panel panel" aria-label={t("Plansza do gry w chińczyka")}>
             <div className="board-heading"><div className="board-label"><span className={`status-dot ${started && !paused && !winner ? 'live' : ''}`}/>{winner ? t("Koniec partii") : !started ? t("Twój stół do gry") : paused ? t("Gra wstrzymana") : t("Partia w toku")}</div><span className="round-label">{started ? t("Ruch {count}", { count: state.movesCount + 1 }) : t("Zaczynają {color}", { color: t(ColorNames[state.players.find(Boolean)?.id || 1]).toLowerCase() })}</span></div>
             <div className="board-wrap"><div className="game-board">
-              {[3, 4, 2, 1].map(id => <div key={id} aria-hidden="true" className={`base-zone base-${id} color-${Colors[id]}`}><span>{t(ColorNames[id])}</span><small>{t("BAZA")}</small></div>)}
+              {[3, 4, 2, 1].map(id => <div key={id} aria-hidden="true" className={`base-zone base-${id} color-${Colors[id]}`}><span><PlayerSymbol player={id}/>{t(ColorNames[id])}</span><small>{t("BAZA")}</small></div>)}
               {Array.from({ length: 11 }, (_, y) => Array.from({ length: 11 }, (_, x) => {
                 const color = Filds[y][x]
                 const movable = canMove && actions.some(action => action[0] === x && action[1] === y)
