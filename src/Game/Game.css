@@ -1,6 +1,5 @@
 .app-shell { max-width: 1540px; padding: 28px 48px 0; margin: 0 auto; }
-.rules-link { font-size: 12px; font-weight: 600; text-decoration: none; display: flex; gap: 8px; align-items: center; }
-.rules-link span { font-size: 17px; }
+.source-link { font-size: 12px; font-weight: 600; text-underline-offset: 3px; }
 .eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 1.6px; color: #7b846f; }
 h1, h2, h3, p { margin: 0; }
 h1, h2, h3 { font-family: 'Manrope', sans-serif; }
@@ -38,11 +37,12 @@ h2 { font-size: 19px; letter-spacing: -.6px; line-height: 1.35; font-weight: 750
 .local-note { display: flex; gap: 10px; align-items: center; border-top: 1px solid #e9ebe3; padding-top: 14px; margin-top: 16px; color: #8b9181; font-size: 9px; line-height: 1.65; }
 .local-note > span:first-child { font-size: 23px; color: #8e9c7b; }
 .board-panel { padding: 22px; background: #fffefa; overflow: hidden; }
-.board-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.board-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; }
+.board-title { margin: 0; font-size: clamp(18px, 2vw, 24px); font-weight: 800; letter-spacing: -1px; text-align: center; white-space: nowrap; }
 .board-label { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #b7bca9; }
+.status-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; background: #b7bca9; }
 .status-dot.live { background: #6f9b62; box-shadow: 0 0 0 3px #e8efdd; }
-.round-label { font-size: 9px; color: #8e9386; }
+.round-label { font-size: 9px; color: #8e9386; text-align: right; justify-self: end; }
 .board-wrap { margin: 24px auto 23px; padding: 15px; border-radius: 17px; background: #f2f1e7; border: 1px solid #e7e6da; box-shadow: inset 0 2px 5px #777b5c05; max-width: 620px; }
 .game-board { position: relative; display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; isolation: isolate; aspect-ratio: 1; }
 .square, .square-void { width: 100%; aspect-ratio: 1; min-width: 0; }
@@ -124,7 +124,6 @@ footer > span:last-child > span { color: #819968; margin-left: 4px; }
 @media (max-width: 700px) { .app-shell { padding: 20px 20px 0; } h1 { font-size: 29px; max-width: 330px; letter-spacing: -1.2px; } .eyebrow { font-size: 8px; letter-spacing: 1.3px; } .game-layout { grid-template-columns: 1fr; gap: 16px; } .board-panel { grid-row: 1; padding: 17px; } .board-wrap { margin: 19px 0; } .turn-panel { grid-column: 1; grid-row: 2; } .players-panel { grid-row: 3; padding: 20px; } .player-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; } .local-note { font-size: 10px; } .player-card .player-description { font-size: 10px; min-height: 50px; } .base-zone > span { font-size: clamp(10px,3vw,16px); } .board-caption { font-size: 9px; } .rules-section { grid-template-columns: 1fr; margin-top: 25px; padding: 25px 0; gap: 22px; } .rules-title { grid-column: auto; } .rule p { font-size: 11px; } .rule h3 { font-size: 12px; } .footer-note { display: none; } }
 @media (max-width: 400px) { .app-shell { padding: 14px 14px 0; } .board-panel { padding: 12px; } .board-wrap { padding: 8px; } .game-board { gap: 3px; } .turn-panel { flex-direction: column; } .turn-card, .pace-card { width: 100%; } .turn-card { padding: 22px; } .dice-stage { flex-direction: row; justify-content: center; gap: 25px; padding: 24px 0; } .dice-stage > span { max-width: 90px; line-height: 1.7; } .player-card { padding: 10px; } .players-panel { padding: 16px; } .round-label { max-width: 90px; text-align: right; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
-.rules-link .info-icon { width: 16px; height: 16px; border: 1px solid currentColor; border-radius: 50%; font: 600 11px/14px Georgia, serif; text-align: center; }
 /* Keep the whole board within reach on typical laptop screens. */
 @media (min-width: 961px) {
   .board-wrap { max-width: min(620px, max(360px, calc(100dvh - 180px))); }

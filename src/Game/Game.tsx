@@ -533,11 +533,10 @@ export default class Game extends React.Component<{}, IGameState> {
     const statusDescription = winner ? t("Cztery pionki na mecie. Pora na rewanż?") : !started ? t("Wybierz towarzystwo i rozpocznij pierwszą rundę.") : paused ? t("Plansza poczeka. Wznów, kiedy zechcesz.") : human ? (awaitingRoll ? t("Zobaczmy, co przyniesie los.") : actions.length ? t("Podświetlone pionki mogą ruszyć. Kliknij jeden z nich.") : t("Nie masz dostępnych ruchów. Przekaż kostkę dalej.")) : t("Za moment kostka trafi do kolejnego gracza.")
     return <div className={`app-shell ${started ? 'is-playing' : 'is-setup'}`}>
       <main>
-        <h1 className="sr-only">{t("Chińczyk")}</h1>
         <div className="game-layout">
           {this.renderPlayers()}
           <section className="board-panel panel" aria-label={t("Plansza do gry w chińczyka")}>
-            <div className="board-heading"><div className="board-label"><span className={`status-dot ${started && !paused && !winner ? 'live' : ''}`}/>{winner ? t("Koniec partii") : !started ? t("Twój stół do gry") : paused ? t("Gra wstrzymana") : t("Partia w toku")}</div><span className="round-label">{started ? t("Ruch {count}", { count: state.movesCount + 1 }) : t("Zaczynają {color}", { color: t(ColorNames[state.players.find(Boolean)?.id || 1]).toLowerCase() })}</span></div>
+            <div className="board-heading"><div className="board-label"><span className={`status-dot ${started && !paused && !winner ? 'live' : ''}`}/>{winner ? t("Koniec partii") : !started ? t("Twój stół do gry") : paused ? t("Gra wstrzymana") : t("Partia w toku")}</div><h1 className="board-title">{t("chińczyk")}<span>.</span></h1><span className="round-label">{started ? t("Ruch {count}", { count: state.movesCount + 1 }) : t("Zaczynają {color}", { color: t(ColorNames[state.players.find(Boolean)?.id || 1]).toLowerCase() })}</span></div>
             <div className="board-wrap"><div className="game-board">
               {[3, 4, 2, 1].map(id => <div key={id} aria-hidden="true" className={`base-zone base-${id} color-${Colors[id]}`}><span><PlayerSymbol player={id}/>{t(ColorNames[id])}</span><small>{t("BAZA")}</small></div>)}
               {Array.from({ length: 11 }, (_, y) => Array.from({ length: 11 }, (_, x) => {
@@ -566,7 +565,7 @@ export default class Game extends React.Component<{}, IGameState> {
         </div>
         <section className="rules-section" id="zasady"><div className="rules-title"><span className="eyebrow">{t("MINUTA I JUŻ GRASZ")}</span><h2>{t("Małe przypomnienie zasad")}</h2></div><div className="rule"><span>01</span><div><h3>{t("Szóstka na dobry początek")}</h3><p>{t("Wyrzuć 6, żeby wyprowadzić pionek z bazy. Gdy wszystkie są w bazie, masz do trzech prób.")}</p></div></div><div className="rule"><span>02</span><div><h3>{t("Ścigaj się i zbijaj")}</h3><p>{t("Ruszaj po torze. Wejście na pole rywala odsyła jego pionek do bazy.")}</p></div></div><div className="rule"><span>03</span><div><h3>{t("Wszyscy do domu")}</h3><p>{t("Wprowadź cztery pionki na kolorową metę. Potrzebujesz dokładnego rzutu.")}</p></div></div></section>
       </main>
-      <footer><a className="rules-link" href="#zasady">{t("Jak grać")}</a><span>{t("chińczyk.")}{" "}<span className="footer-note">{t("Dobry ruch na wolną chwilę.")}</span></span><div className="language-switch" role="group" aria-label="Language / Język">
+      <footer><a className="source-link" href="https://github.com/adam-zielonka/chinczyk">{t("Kod źródłowy")}</a><span>{t("chińczyk.")}{" "}<span className="footer-note">{t("Dobry ruch na wolną chwilę.")}</span></span><div className="language-switch" role="group" aria-label="Language / Język">
   <button type="button" lang="en" aria-pressed={language === "en"} onClick={() => setLanguage("en")}>English</button>
   <span aria-hidden="true">/</span>
   <button type="button" lang="pl" aria-pressed={language === "pl"} onClick={() => setLanguage("pl")}>Polski</button>

@@ -30,7 +30,7 @@ const translations: Record<string, string> = {
   "Nie masz dostępnych ruchów. Przekaż kostkę dalej.": "You have no legal moves. Pass the dice on.",
   "Za moment kostka trafi do kolejnego gracza.": "The dice will reach the next player shortly.",
   "Klasyczna gra. Dobre towarzystwo.": "A classic game. Good company.",
-  "Jak grać": "How to play",
+  "Kod źródłowy": "Source code",
   "ODŁÓŻ SPRAWY. RZUĆ KOSTKĄ.": "TAKE A BREAK. ROLL THE DICE.",
   "Spotkajmy się przy planszy": "Meet me at the board",
   "Trochę szczęścia, odrobina strategii i jeszcze jedna partia.": "A little luck, a little strategy and just one more game.",
