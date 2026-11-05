@@ -1,4 +1,12 @@
 const translations: Record<string, string> = {
+  "Gracze": "Players",
+  "Wybierz graczy": "Choose players",
+  "Gotowi do gry?": "Ready to play?",
+  "Twój ruch": "Your turn",
+  "Kliknij podświetlony pionek.": "Select a highlighted pawn.",
+  "Zasady gry": "How to play",
+  "Zamknij zasady": "Close rules",
+  "Ustawienia": "Settings",
   "Chińczyk": "Ludo",
   "Chińczyk — strona główna": "Ludo home",
   "chińczyk": "ludo",

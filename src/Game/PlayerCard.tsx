@@ -77,7 +77,6 @@ export default function PlayerCard({ id, type, started, active, finished, progre
           : <span className="player-edit" aria-hidden="true">↗</span>}
       </span>
       <span className="player-name">{t(profile.name)}</span>
-      <span className="player-description">{t(profile.description)}</span>
       {started && type !== PlayerType.None && <span className="progress-track" aria-label={t('Postęp: {color}', { color: t(ColorNames[id]) })}><span style={{ width: `${Math.min(100, progress * 100)}%` }}/></span>}
     </button>
     {open && !started && <PlayerDialog id={id} type={type} onSelect={onSelect} onClose={() => setOpen(false)}/>}

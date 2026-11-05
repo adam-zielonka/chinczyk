@@ -42,6 +42,10 @@ describe('player-facing game flow', () => {
     await act(async () => button('Zagrajmy').click())
     await act(async () => { game.state.dice.state = 6; button('Rzuć kostką').click() })
     expect(container.querySelectorAll('.can-move')).toHaveLength(4)
+    expect(container.querySelector('.move-hint')?.textContent).toBe('Kliknij podświetlony pionek.')
+    expect(container.querySelector('.turn-status')?.textContent).toContain('Wybierz swój pionek')
+    expect(document.activeElement).toBe(container.querySelector('.can-move'))
+    expect(container.querySelector('.turn-player')?.textContent).toBe('Zieloni')
     await act(async () => (container.querySelector('.can-move') as HTMLButtonElement).click())
     const [x, y] = PlayerFilds[1].board[0]
     expect(game.state.filds[y][x]).toBe(1)
@@ -198,6 +202,43 @@ describe('player-facing game flow', () => {
     expect(game.state.playerList[1]).toBe(PlayerType.Tactician)
   })
 
+  it('pauses computer turns while rules are read and restores focus without restarting the game', async () => {
+    await act(async () => game.setPlayerType(1, PlayerType.Hunter))
+    await act(async () => game.startGame())
+    const opener = button('Zasady gry')
+    await act(async () => opener.click())
+    expect(container.querySelector<HTMLDialogElement>('.rules-dialog')?.open).toBe(true)
+    expect(game.state.paused).toBe(true)
+    await act(async () => (container.querySelector('.rules-content') as HTMLElement).click())
+    expect(container.querySelector<HTMLDialogElement>('.rules-dialog')?.open).toBe(true)
+    const moves = game.state.movesCount
+    await act(async () => vi.advanceTimersByTime(5000))
+    expect(game.state.movesCount).toBe(moves)
+    await act(async () => container.querySelector('.rules-dialog')!.dispatchEvent(new Event('cancel', { cancelable: true })))
+    expect(container.querySelector('.rules-dialog')).toBeNull()
+    expect(document.activeElement).toBe(opener)
+    expect(document.body.style.overflow).not.toBe('hidden')
+    expect(game.state.paused).toBe(true)
+    await act(async () => button('Wznów grę').click())
+    await act(async () => vi.advanceTimersByTime(game.state.time))
+    expect(game.state.movesCount).toBe(moves + 1)
+  })
+
+  it('keeps descriptions in the picker and hides computer settings for a local-only match', async () => {
+    expect(container.querySelectorAll('.player-card .player-description')).toHaveLength(0)
+    await act(async () => seat(2).click())
+    expect(container.querySelectorAll('.player-option .player-description')).toHaveLength(PlayersTypes.length)
+    await act(async () => option('Ty · gracz lokalny').click())
+    for (const id of [3, 4]) await act(async () => game.setPlayerType(id, PlayerType.None))
+    expect(container.querySelector('.settings')).toBeNull()
+    await act(async () => game.startGame())
+    expect(container.querySelector('#players-title')?.textContent).toBe('Gracze')
+    expect(container.querySelector('.turn-player')?.textContent).toBe('Zieloni')
+    await act(async () => game.newGame())
+    await act(async () => game.setPlayerType(2, PlayerType.Hunter))
+    expect(container.querySelector<HTMLDetailsElement>('.settings')?.open).toBe(false)
+  })
+
   it('finishes a match between the new opponents while preserving all pieces and skipping empty seats', async () => {
     let seed = 21
     vi.mocked(Math.random).mockImplementation(() => {
@@ -234,7 +275,7 @@ it('switches language during a match without changing pawns, dice or player choi
     english.click();
   });
   expect(JSON.stringify(game.state)).toBe(before);
-  expect(container.querySelector('#turn-title')?.textContent).toBe('Your turn. Roll the dice!');
+  expect(container.querySelector('#turn-title')?.textContent).toBe('Your turn');
   expect(seat(1).querySelector('.player-name')?.textContent).toBe('You · local player');
   expect(localStorage.getItem('chinczyk-language')).toBe('en');
   expect(document.documentElement.lang).toBe('en');
