@@ -542,7 +542,6 @@ export default class Game extends React.Component<{}, IGameState> {
     const hasComputer = state.playerList.some(type => type !== undefined && type !== PlayerType.None && type !== PlayerType.Human)
     const statusTitle = winner ? t("{color} wygrywają!", { color: t(ColorNames[winner]) }) : !started ? t("Gotowi do gry?") : paused ? t("Gra wstrzymana") : human ? (awaitingRoll ? t("Twój ruch") : actions.length ? t("Wybierz swój pionek") : t("Tym razem bez ruchu")) : t("{name} wykonuje ruch…", { name: t(profile.name).split(" · ")[0] })
     return <div className={`app-shell ${started ? 'is-playing' : 'is-setup'}`}>
-      <div className="app-tools"><LanguageSwitch /></div>
       <main>
         <div className="game-layout">
           {this.renderPlayers()}

@@ -13,7 +13,7 @@ Instrukcje uruchamiania i sprawdzania projektu: [DEVELOPMENT.md](DEVELOPMENT.md)
 
 The browser version supports Polish and English. On the first visit it uses the
 first supported language from the browser’s preferences, falling back to English.
-The Polski / English controls above the game and in the footer save an explicit choice
+The Polski / English controls in the footer save an explicit choice
 in this application’s local storage.
 Switching language preserves the current game. If storage is blocked, language switching
 still works for the current visit.
