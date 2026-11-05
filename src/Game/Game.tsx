@@ -12,8 +12,9 @@ import PlayerLast from './players/PlayerLast'
 import PlayerRandom from './players/PlayerRandom'
 import Square from './Square'
 import PlayerSymbol from './PlayerSymbol'
+import PlayerCard from './PlayerCard'
 import PlayerStrategic from './players/PlayerStrategic'
-import { PlayerType, PlayersTypes, PlayerProfiles, ColorNames } from './PlayerProfiles'
+import { PlayerType, PlayerProfiles, ColorNames } from './PlayerProfiles'
 export { PlayerType, PlayersTypes } from './PlayerProfiles'
 
 export interface IGameState {
@@ -512,21 +513,9 @@ export default class Game extends React.Component<{}, IGameState> {
       <p className="section-description">{t("Zaproś znajomych na jeden ekran albo poznaj naszych graczy.")}</p>
       <div className="player-list">{[1, 2, 3, 4].map(id => {
         const type = this.state.playerList[id]
-        const profile = PlayerProfiles[type]
         const active = this.state.started && !this.state.winner && this.state.token === id
-        return <div key={id} className={`player-card color-${Colors[id]} ${active ? 'is-current' : ''} ${type === PlayerType.None ? 'is-empty' : ''}`}>
-          <div className="player-card-top"><span className="avatar">{t(profile.initial)}</span>
-            <div><span className="player-color"><PlayerSymbol player={id}/>{t(ColorNames[id])}</span><span className="player-badge">{active ? t("Teraz gra") : t(profile.badge)}</span></div>
-            {this.state.started && <span className="home-count" title={t("Pionki na mecie")}>{this.finishedCount(id)}<span> / 4</span></span>}
-          </div>
-          <label className="sr-only" htmlFor={`player-${id}`}>{t("Gracz:")}{" "}{t(ColorNames[id])}</label>
-          <select id={`player-${id}`} value={type} disabled={this.state.started}
-            onChange={event => this.setPlayerType(id, event.target.value as PlayerType)}>
-            {PlayersTypes.map(player => <option key={player} value={player}>{t(PlayerProfiles[player].name)}</option>)}
-          </select>
-          <p>{t(profile.description)}</p>
-          {this.state.started && type !== PlayerType.None && <div className="progress-track" aria-label={t("Postęp: {color}", { color: t(ColorNames[id]) })}><span style={{ width: `${Math.min(100, this.complateProcentT(id) * 100)}%` }} /></div>}
-        </div>
+        return <PlayerCard key={id} id={id} type={type} started={this.state.started} active={active}
+          finished={this.finishedCount(id)} progress={this.complateProcentT(id)} onSelect={type => this.setPlayerType(id, type)}/>
       })}</div>
       <div className="local-note"><span aria-hidden="true">⌂</span><span>{t("Razem przy jednym ekranie.")}<br/>{t("Bez konta i bez pośpiechu.")}</span></div>
     </aside>
@@ -543,13 +532,8 @@ export default class Game extends React.Component<{}, IGameState> {
     const statusTitle = winner ? t("{color} wygrywają!", { color: t(ColorNames[winner]) }) : !started ? t("Wszystko gotowe do gry?") : paused ? t("Chwila oddechu") : human ? (awaitingRoll ? t("Twoja kolej. Rzuć kostką!") : actions.length ? t("Wybierz swój pionek") : t("Tym razem bez ruchu")) : t("{name} wykonuje ruch…", { name: t(profile.name).split(" · ")[0] })
     const statusDescription = winner ? t("Cztery pionki na mecie. Pora na rewanż?") : !started ? t("Wybierz towarzystwo i rozpocznij pierwszą rundę.") : paused ? t("Plansza poczeka. Wznów, kiedy zechcesz.") : human ? (awaitingRoll ? t("Zobaczmy, co przyniesie los.") : actions.length ? t("Podświetlone pionki mogą ruszyć. Kliknij jeden z nich.") : t("Nie masz dostępnych ruchów. Przekaż kostkę dalej.")) : t("Za moment kostka trafi do kolejnego gracza.")
     return <div className={`app-shell ${started ? 'is-playing' : 'is-setup'}`}>
-      <header className="site-header">
-        <a href="." className="brand" aria-label={t("Chińczyk — strona główna")}><span className="brand-mark" aria-hidden="true">⚄</span><span>{t("chińczyk")}<span className="brand-period">.</span></span></a>
-        <span className="header-note">{t("Klasyczna gra. Dobre towarzystwo.")}</span>
-        <a className="rules-link" href="#zasady"><span className="info-icon" aria-hidden="true">i</span> {" "}{t("Jak grać")}</a>
-      </header>
       <main>
-        <div className="intro"><div><span className="eyebrow">{t("ODŁÓŻ SPRAWY. RZUĆ KOSTKĄ.")}</span><h1>{t("Spotkajmy się przy planszy")}<span>.</span></h1><p>{t("Trochę szczęścia, odrobina strategii i jeszcze jedna partia.")}</p></div><span className="table-tag"><span/> {" "}{t("2–4 graczy · na jednym ekranie")}</span></div>
+        <h1 className="sr-only">{t("Chińczyk")}</h1>
         <div className="game-layout">
           {this.renderPlayers()}
           <section className="board-panel panel" aria-label={t("Plansza do gry w chińczyka")}>
@@ -582,7 +566,7 @@ export default class Game extends React.Component<{}, IGameState> {
         </div>
         <section className="rules-section" id="zasady"><div className="rules-title"><span className="eyebrow">{t("MINUTA I JUŻ GRASZ")}</span><h2>{t("Małe przypomnienie zasad")}</h2></div><div className="rule"><span>01</span><div><h3>{t("Szóstka na dobry początek")}</h3><p>{t("Wyrzuć 6, żeby wyprowadzić pionek z bazy. Gdy wszystkie są w bazie, masz do trzech prób.")}</p></div></div><div className="rule"><span>02</span><div><h3>{t("Ścigaj się i zbijaj")}</h3><p>{t("Ruszaj po torze. Wejście na pole rywala odsyła jego pionek do bazy.")}</p></div></div><div className="rule"><span>03</span><div><h3>{t("Wszyscy do domu")}</h3><p>{t("Wprowadź cztery pionki na kolorową metę. Potrzebujesz dokładnego rzutu.")}</p></div></div></section>
       </main>
-      <footer><span>{t("chińczyk.")}{" "}<span className="footer-note">{t("Dobry ruch na wolną chwilę.")}</span></span><div className="language-switch" role="group" aria-label="Language / Język">
+      <footer><a className="rules-link" href="#zasady">{t("Jak grać")}</a><span>{t("chińczyk.")}{" "}<span className="footer-note">{t("Dobry ruch na wolną chwilę.")}</span></span><div className="language-switch" role="group" aria-label="Language / Język">
   <button type="button" lang="en" aria-pressed={language === "en"} onClick={() => setLanguage("en")}>English</button>
   <span aria-hidden="true">/</span>
   <button type="button" lang="pl" aria-pressed={language === "pl"} onClick={() => setLanguage("pl")}>Polski</button>

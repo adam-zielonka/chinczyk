@@ -3,6 +3,7 @@ import * as React from 'react'
 import { Colors } from './Consts'
 import { ColorNames } from './PlayerProfiles'
 import PlayerSymbol from './PlayerSymbol'
+import PlayerPawn from './PlayerPawn'
 
 type Props = {
   color: number
@@ -21,7 +22,7 @@ const Square: React.FC<Props> = ({ color, activeColor, disabled, movable, x, y, 
       piece: activeColor ? t("Pionek: {color}", { color: t(ColorNames[activeColor]) }) : t("Puste pole"),
       row: y + 1, col: x + 1, hint: movable ? t(", możesz ruszyć") : ""
     })}>
-      {activeColor ? <span className={`stone color-${Colors[activeColor]}`}><PlayerSymbol player={activeColor}/></span>
+      {activeColor ? <PlayerPawn player={activeColor}/>
         : color ? <PlayerSymbol player={color}/> : <span className="field-mark"/>}
   </button>
 }
