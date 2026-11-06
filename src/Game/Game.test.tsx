@@ -7,6 +7,7 @@ import { setLanguage } from '../i18n'
 import { PlayerProfiles, PlayersTypes, PlayerType } from './PlayerProfiles'
 import { PlayerFilds } from './Consts'
 import Square from './Square'
+import { PawnSymbolsContext } from './PlayerPawn'
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 
@@ -18,6 +19,7 @@ const option = (name: string) => [...container.querySelectorAll<HTMLButtonElemen
 const button = (text: string) => [...container.querySelectorAll('button')].find(element => element.textContent.includes(text))!
 
 beforeEach(async () => {
+  localStorage.removeItem('chinczyk-pawn-symbols')
   setLanguage("pl")
   vi.useFakeTimers()
   vi.spyOn(Math, 'random').mockReturnValue(0)
@@ -37,6 +39,7 @@ afterEach(async () => {
 
 describe('player-facing game flow', () => {
   it('starts with a human and requires rolling before a legal pawn can be clicked', async () => {
+    await act(async () => container.querySelector<HTMLInputElement>('#pawnSymbols')!.click())
     expect(game.state.playerList[1]).toBe(PlayerType.Human)
     expect(container.querySelectorAll('.can-move')).toHaveLength(0)
     await act(async () => button('Zagrajmy').click())
@@ -56,7 +59,10 @@ describe('player-facing game flow', () => {
     expect(container.querySelectorAll('.can-move')).toHaveLength(0)
   })
 
-  it('keeps all four visible seat symbols consistent across profiles, pawns and the legend', async () => {
+  it('keeps seat symbols consistent when profiles change in the four board bases', async () => {
+    await act(async () => container.querySelector<HTMLInputElement>('#pawnSymbols')!.click())
+    expect(container.querySelectorAll('.game-board button.base-zone')).toHaveLength(4)
+    for (const id of [1, 2, 3, 4]) expect(seat(id).matches(`button.base-zone.base-${id}`)).toBe(true)
     const original = [1, 2, 3, 4].map(id => container.querySelector(`.game-board .stone .player-symbol[data-player="${id}"]`)!.innerHTML)
     expect(new Set(original).size).toBe(4)
     await act(async () => game.setPlayerType(1, PlayerType.Hunter))
@@ -65,12 +71,13 @@ describe('player-facing game flow', () => {
       for (const symbol of container.querySelectorAll(`.player-symbol[data-player="${id}"]`)) {
         expect(symbol.innerHTML).toBe(original[id - 1])
       }
-      expect(container.querySelector(`.pawn-avatar .player-symbol[data-player="${id}"]`)).not.toBeNull()
-      expect(container.querySelector(`.base-${id} .player-symbol[data-player="${id}"]`)).not.toBeNull()
+      expect(seat(id).querySelector('.player-symbol')).toBeNull()
+      expect(seat(id).querySelector('.player-color')).toBeNull()
     }
     await act(async () => game.setPlayerType(1, PlayerType.None))
     expect(container.querySelector('.game-board .stone .player-symbol[data-player="1"]')).toBeNull()
-    expect(container.querySelector('.pawn-avatar .player-symbol[data-player="1"]')?.innerHTML).toBe(original[0])
+    expect(seat(1).querySelector('.base-label')).toBeNull()
+    expect(seat(1).getAttribute('title')).toBeNull()
   })
 
   it('lets a human pass without a move and grants up to three initial attempts', async () => {
@@ -111,8 +118,8 @@ describe('player-facing game flow', () => {
     expect(game.state.players.map(player => player?.id)).toEqual([undefined, undefined, 3, 4])
   })
 
-  it('keeps all four player cards locked throughout a match and unlocks them for the next one', async () => {
-    expect(container.querySelectorAll('.player-card')).toHaveLength(4)
+  it('keeps all four bases locked throughout a match and unlocks them for the next one', async () => {
+    expect(container.querySelectorAll('.base-zone')).toHaveLength(4)
     await act(async () => game.startGame())
     for (const phase of ['playing', 'paused', 'finished']) {
       if (phase === 'paused') await act(async () => game.pauseGame())
@@ -139,13 +146,23 @@ describe('player-facing game flow', () => {
       expect(dialog.open).toBe(true)
       expect(dialog.getAttribute('aria-labelledby')).toBe('picker-title-2')
       expect(container.querySelectorAll('.player-option')).toHaveLength(9)
+      const icons = [...container.querySelectorAll('.player-option .avatar')]
+      expect(icons.every(icon => icon.textContent === '' && icon.querySelector('svg'))).toBe(true)
+      expect(new Set(icons.map(icon => icon.innerHTML)).size).toBe(PlayersTypes.length)
       const selected = container.querySelector('.player-option[aria-pressed="true"]')!
       expect(selected.textContent).toContain(PlayerProfiles[game.state.playerList[2]].name)
       expect(document.activeElement).toBe(selected)
       await act(async () => option(PlayerProfiles[type].name).click())
       expect(game.state.playerList[2]).toBe(type)
       for (const id of [1, 3, 4]) expect(game.state.playerList[id]).toBe(original[id])
-      expect(seat(2).querySelector('.player-name')?.textContent).toBe(PlayerProfiles[type].name)
+      if (type === PlayerType.None) {
+        expect(seat(2).querySelector('.base-label')).toBeNull()
+        expect(seat(2).querySelector('.profile-symbol')).toBeNull()
+      } else {
+        expect(seat(2).querySelector('.player-name')?.textContent).toBe(PlayerProfiles[type].name.split(' · ')[0])
+        expect(seat(2).querySelector('.profile-symbol')?.outerHTML).toBe(icons[PlayersTypes.indexOf(type)].querySelector('svg')?.outerHTML)
+      }
+      expect(seat(2).getAttribute('aria-label')).toBe(`Gracz: Żółci, ${PlayerProfiles[type].name}`)
       expect(container.querySelector('dialog')).toBeNull()
       expect(document.activeElement).toBe(seat(2))
       expect(document.body.style.overflow).not.toBe('hidden')
@@ -181,7 +198,7 @@ describe('player-facing game flow', () => {
     expect(button('Zagrajmy').disabled).toBe(true)
     for (const id of [3, 4]) {
       await act(async () => seat(id).click())
-      await act(async () => option('Ty · gracz lokalny').click())
+      await act(async () => option('Gracz · lokalny').click())
       expect(game.state.filds.flat().filter(piece => piece === id)).toHaveLength(4)
       expect(button('Zagrajmy').disabled).toBe(id === 3)
     }
@@ -195,10 +212,11 @@ describe('player-facing game flow', () => {
     expect(container.querySelector('#picker-title-1')?.textContent).toBe('Choose a player')
     expect(container.querySelector('#picker-hint-1')?.textContent).toBe('Click a tile to choose a player for this colour.')
     expect(container.querySelector('.dialog-close')?.getAttribute('aria-label')).toBe('Close player selection')
-    expect(seat(1).getAttribute('aria-label')).toBe('Player: Green, You · local player')
-    expect(container.querySelector('.player-option[aria-pressed="true"]')?.textContent).toContain('You · local player')
+    expect(seat(1).getAttribute('aria-label')).toBe('Player: Green, Player · local')
+    expect(container.querySelector('.player-option[aria-pressed="true"]')?.textContent).toContain('Player · local')
     await act(async () => option('Mila · tactician').click())
-    expect(seat(1).querySelector('.player-name')?.textContent).toBe('Mila · tactician')
+    expect(seat(1).querySelector('.player-name')?.textContent).toBe('Mila')
+    expect(seat(1).getAttribute('aria-label')).toBe('Player: Green, Mila · tactician')
     expect(game.state.playerList[1]).toBe(PlayerType.Tactician)
   })
 
@@ -224,19 +242,46 @@ describe('player-facing game flow', () => {
     expect(game.state.movesCount).toBe(moves + 1)
   })
 
-  it('keeps descriptions in the picker and hides computer settings for a local-only match', async () => {
-    expect(container.querySelectorAll('.player-card .player-description')).toHaveLength(0)
+  it('keeps language and source in settings while hiding pace for a local-only match', async () => {
+    expect(container.querySelectorAll('.base-zone .player-description')).toHaveLength(0)
     await act(async () => seat(2).click())
     expect(container.querySelectorAll('.player-option .player-description')).toHaveLength(PlayersTypes.length)
-    await act(async () => option('Ty · gracz lokalny').click())
+    await act(async () => option('Gracz · lokalny').click())
     for (const id of [3, 4]) await act(async () => game.setPlayerType(id, PlayerType.None))
-    expect(container.querySelector('.settings')).toBeNull()
+    expect(container.querySelector('footer')).toBeNull()
+    expect(container.querySelector('.settings #playerDelay')).toBeNull()
+    expect(container.querySelectorAll('.settings .language-options button')).toHaveLength(2)
+    expect(container.querySelector('.settings .source-link')?.getAttribute('href')).toBe('https://github.com/adam-zielonka/chinczyk')
+    expect(container.querySelector('.rules-button')?.nextElementSibling).toBe(container.querySelector('.settings'))
     await act(async () => game.startGame())
-    expect(container.querySelector('#players-title')?.textContent).toBe('Gracze')
+    expect(seat(1).getAttribute('aria-current')).toBe('true')
+    expect(container.querySelector('.board-setup-hint')).toBeNull()
     expect(container.querySelector('.turn-player')?.textContent).toBe('Zieloni')
     await act(async () => game.newGame())
     await act(async () => game.setPlayerType(2, PlayerType.Hunter))
     expect(container.querySelector<HTMLDetailsElement>('.settings')?.open).toBe(false)
+  })
+
+  it('defaults to plain pawns and changes their symbols without changing a match', async () => {
+    const toggle = container.querySelector<HTMLInputElement>('#pawnSymbols')!
+    expect(toggle.checked).toBe(false)
+    expect(container.querySelectorAll('.game-board .stone')).toHaveLength(16)
+    expect(container.querySelectorAll('.game-board .stone .player-symbol')).toHaveLength(0)
+    expect(container.querySelectorAll('.game-board .player-symbol')).toHaveLength(0)
+    expect(container.querySelectorAll('.base-zone .profile-symbol')).toHaveLength(4)
+    await act(async () => game.startGame())
+    const before = JSON.stringify(game.state)
+    await act(async () => toggle.click())
+    expect(container.querySelectorAll('.game-board .stone .player-symbol')).toHaveLength(16)
+    expect(container.querySelectorAll('.square > .player-symbol').length).toBeGreaterThan(0)
+    expect(JSON.stringify({ ...game.state, showPawnSymbols: false })).toBe(before)
+    expect(localStorage.getItem('chinczyk-pawn-symbols')).toBe('true')
+    await act(async () => game.newGame())
+    expect(toggle.checked).toBe(true)
+    await act(async () => toggle.click())
+    expect(container.querySelectorAll('.game-board .stone .player-symbol')).toHaveLength(0)
+    expect(container.querySelectorAll('.game-board .player-symbol')).toHaveLength(0)
+    expect(localStorage.getItem('chinczyk-pawn-symbols')).toBe('false')
   })
 
   it('finishes a match between the new opponents while preserving all pieces and skipping empty seats', async () => {
@@ -270,20 +315,23 @@ describe('player-facing game flow', () => {
 it('switches language during a match without changing pawns, dice or player choices', async () => {
   await act(async () => game.startGame());
   const before = JSON.stringify(game.state);
-  const english = container.querySelector('footer button[lang="en"]') as HTMLButtonElement;
+  const english = container.querySelector<HTMLButtonElement>('.language-options button[lang="en"]')!;
   await act(async () => {
+    container.querySelector<HTMLDetailsElement>('.settings')!.open = true;
     english.click();
   });
   expect(JSON.stringify(game.state)).toBe(before);
   expect(container.querySelector('#turn-title')?.textContent).toBe('Your turn');
-  expect(seat(1).querySelector('.player-name')?.textContent).toBe('You · local player');
+  expect(seat(1).querySelector('.player-name')?.textContent).toBe('Player');
+  expect(seat(1).getAttribute('aria-label')).toBe('Player: Green, Player · local');
   expect(localStorage.getItem('chinczyk-language')).toBe('en');
   expect(document.documentElement.lang).toBe('en');
+  expect(english.getAttribute('aria-pressed')).toBe('true');
 });
 
 it('shows the pawn identity instead of the owner mark on an occupied field, including home', async () => {
   for (const field of [0, 1, 2, 3, 4]) {
-    await act(async () => root.render(<Square color={field} activeColor={4} disabled movable={false} x={0} y={0} onClick={() => {}}/>))
+    await act(async () => root.render(<PawnSymbolsContext.Provider value={true}><Square color={field} activeColor={4} disabled movable={false} x={0} y={0} onClick={() => {}}/></PawnSymbolsContext.Provider>))
     expect(container.querySelectorAll('.player-symbol')).toHaveLength(1)
     expect(container.querySelector('.stone .player-symbol')?.getAttribute('data-player')).toBe('4')
     expect(container.querySelector('button')?.getAttribute('aria-label')).toContain('Niebiescy')

@@ -2,10 +2,12 @@ import * as React from 'react'
 import { language, setLanguage, t } from '../i18n'
 
 export function LanguageSwitch() {
-  return <div className="language-switch" role="group" aria-label="Language / Język">
-    <button type="button" lang="pl" aria-pressed={language === 'pl'} onClick={() => setLanguage('pl')}>Polski</button>
-    <span aria-hidden="true">/</span>
-    <button type="button" lang="en" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button>
+  return <div className="setting-field language-switch">
+    <span id="language-label">{t('Język')}</span>
+    <div className="language-options" role="group" aria-labelledby="language-label">
+      <button type="button" lang="pl" aria-pressed={language === 'pl'} onClick={() => setLanguage('pl')}>Polski</button>
+      <button type="button" lang="en" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button>
+    </div>
   </div>
 }
 
@@ -48,7 +50,7 @@ function RulesDialog({ onClose }: { onClose(): void }) {
 export function RulesHelp({ onOpen }: { onOpen(): void }) {
   const [open, setOpen] = React.useState(false)
   return <>
-    <button type="button" className="text-button" aria-haspopup="dialog" aria-expanded={open}
+    <button type="button" className="rules-button panel" aria-haspopup="dialog" aria-expanded={open}
       onClick={event => { event.currentTarget.focus(); onOpen(); setOpen(true) }}>{t('Zasady gry')}</button>
     {open && <RulesDialog onClose={() => setOpen(false)}/>}
   </>

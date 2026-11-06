@@ -3,7 +3,7 @@ import * as React from 'react'
 import { Colors } from './Consts'
 import { ColorNames } from './PlayerProfiles'
 import PlayerSymbol from './PlayerSymbol'
-import PlayerPawn from './PlayerPawn'
+import PlayerPawn, { PawnSymbolsContext } from './PlayerPawn'
 
 type Props = {
   color: number
@@ -16,6 +16,7 @@ type Props = {
 }
 
 const Square: React.FC<Props> = ({ color, activeColor, disabled, movable, x, y, onClick }) => {
+  const showSymbols = React.useContext(PawnSymbolsContext)
   if (color === undefined) return <span className="square-void" aria-hidden="true" />
   return <button className={`square bg-${Colors[color]} ${movable ? 'can-move' : ''}`} disabled={disabled} onClick={onClick}
     aria-label={t("{piece}, rząd {row}, kolumna {col}{hint}", {
@@ -23,7 +24,7 @@ const Square: React.FC<Props> = ({ color, activeColor, disabled, movable, x, y, 
       row: y + 1, col: x + 1, hint: movable ? t(", możesz ruszyć") : ""
     })}>
       {activeColor ? <PlayerPawn player={activeColor}/>
-        : color ? <PlayerSymbol player={color}/> : <span className="field-mark"/>}
+        : color && showSymbols ? <PlayerSymbol player={color}/> : <span className="field-mark"/>}
   </button>
 }
 export default Square

@@ -3,14 +3,13 @@ import { t } from '../i18n'
 import { Colors } from './Consts'
 import { ColorNames, PlayerProfiles, PlayersTypes, PlayerType } from './PlayerProfiles'
 import PlayerPawn from './PlayerPawn'
+import ProfileSymbol from './ProfileSymbol'
 
 type Props = {
   id: number
   type: PlayerType
   started: boolean
   active: boolean
-  finished: number
-  progress: number
   onSelect(type: PlayerType): void
 }
 
@@ -48,7 +47,7 @@ function PlayerDialog({ id, type, onSelect, onClose }: Pick<Props, 'id' | 'type'
         const selected = option === type
         return <button key={option} type="button" className="player-option" aria-pressed={selected}
           ref={selected ? selectedRef : undefined} onClick={() => { onSelect(option); onClose() }}>
-          <span className="option-heading"><span className="avatar" aria-hidden="true">{t(profile.initial)}</span>
+          <span className="option-heading"><span className="avatar"><ProfileSymbol type={option}/></span>
             <span className="player-badge">{t(profile.badge)}</span>
             {selected && <span className="option-check" aria-hidden="true">✓</span>}
           </span>
@@ -60,24 +59,22 @@ function PlayerDialog({ id, type, onSelect, onClose }: Pick<Props, 'id' | 'type'
   </dialog>
 }
 
-export default function PlayerCard({ id, type, started, active, finished, progress, onSelect }: Props) {
+export default function PlayerBase({ id, type, started, active, onSelect }: Props) {
   const [open, setOpen] = React.useState(false)
   const profile = PlayerProfiles[type]
   React.useEffect(() => { if (started) setOpen(false) }, [started])
 
   return <>
     <button type="button" id={`player-${id}`} disabled={started}
-      className={`player-card color-${Colors[id]} ${active ? 'is-current' : ''} ${type === PlayerType.None ? 'is-empty' : ''}`}
+      className={`base-zone base-${id} color-${Colors[id]} ${active ? 'is-current' : ''} ${type === PlayerType.None ? 'is-empty' : ''}`}
       aria-haspopup="dialog" aria-expanded={open && !started}
+      aria-current={active ? 'true' : undefined} title={type === PlayerType.None ? undefined : t(profile.name)}
       aria-label={t('Gracz: {color}, {name}', { color: t(ColorNames[id]), name: t(profile.name) })}
       onClick={event => { event.currentTarget.focus(); setOpen(true) }}>
-      <span className="player-card-top"><span className="avatar pawn-avatar"><PlayerPawn player={id}/></span>
-        <span className="player-card-identity"><span className="player-color">{t(ColorNames[id])}</span><span className="player-badge">{active ? t('Teraz gra') : t(profile.badge)}</span></span>
-        {started ? <span className="home-count" title={t('Pionki na mecie')}>{finished}<span> / 4</span></span>
-          : <span className="player-edit" aria-hidden="true">↗</span>}
-      </span>
-      <span className="player-name">{t(profile.name)}</span>
-      {started && type !== PlayerType.None && <span className="progress-track" aria-label={t('Postęp: {color}', { color: t(ColorNames[id]) })}><span style={{ width: `${Math.min(100, progress * 100)}%` }}/></span>}
+      {type !== PlayerType.None && <span className="base-label">
+        <span className="base-profile"><span className="avatar"><ProfileSymbol type={type}/></span><span className="player-name">{t(profile.name).split(' · ')[0]}</span></span>
+      </span>}
+      {active && <span className="sr-only">{t('Teraz gra')}</span>}
     </button>
     {open && !started && <PlayerDialog id={id} type={type} onSelect={onSelect} onClose={() => setOpen(false)}/>}
   </>

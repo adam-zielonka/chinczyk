@@ -12,7 +12,8 @@ import PlayerLast from './players/PlayerLast'
 import PlayerRandom from './players/PlayerRandom'
 import Square from './Square'
 import PlayerSymbol from './PlayerSymbol'
-import PlayerCard from './PlayerCard'
+import { PawnSymbolsContext } from './PlayerPawn'
+import PlayerBase from './PlayerBase'
 import { LanguageSwitch, RulesHelp } from './GameHelp'
 import PlayerStrategic from './players/PlayerStrategic'
 import { PlayerType, PlayerProfiles, ColorNames } from './PlayerProfiles'
@@ -29,7 +30,8 @@ export interface IGameState {
   time: number,
   started: boolean,
   paused: boolean,
-  awaitingRoll: boolean
+  awaitingRoll: boolean,
+  showPawnSymbols: boolean
 }
 
 export default class Game extends React.Component<{}, IGameState> {
@@ -43,7 +45,6 @@ export default class Game extends React.Component<{}, IGameState> {
   private turnTimer: ReturnType<typeof setTimeout>
 
   private boardRef = React.createRef<HTMLDivElement>()
-  private playersRef = React.createRef<HTMLElement>()
   private unsubscribeLanguage?: () => void
 
   componentDidMount() {
@@ -52,8 +53,7 @@ export default class Game extends React.Component<{}, IGameState> {
 
   componentDidUpdate(_previousProps: {}, previousState: IGameState) {
     if (previousState.started !== this.state.started && window.matchMedia('(max-width: 700px)').matches) {
-      const target = this.state.started ? this.boardRef.current?.closest('.board-panel') : this.playersRef.current
-      target?.scrollIntoView({ block: 'start' })
+      this.boardRef.current?.closest('.board-panel')?.scrollIntoView({ block: 'start' })
     }
   }
 
@@ -92,7 +92,8 @@ export default class Game extends React.Component<{}, IGameState> {
         time: game.getState().time,
         started: game.getState().started,
         paused: game.getState().paused,
-        awaitingRoll: game.getState().awaitingRoll
+        awaitingRoll: game.getState().awaitingRoll,
+        showPawnSymbols: game.getState().showPawnSymbols
       }
       this.symulation = true
       this.stopGame = true
@@ -107,7 +108,10 @@ export default class Game extends React.Component<{}, IGameState> {
         PlayerType.Random
       ]
       const players: IPlayer[] = this.getPlayers(playerList)
+      let showPawnSymbols = false
+      try { showPawnSymbols = localStorage.getItem('chinczyk-pawn-symbols') === 'true' } catch { /* Storage may be blocked. */ }
       this.state = {
+        showPawnSymbols,
         started: false,
         paused: false,
         awaitingRoll: true,
@@ -514,21 +518,9 @@ export default class Game extends React.Component<{}, IGameState> {
     this.setState({ playerList, players, filds: this.clearInactivePlayers(players) })
   }
 
-  private finishedCount(id: number) {
-    return PlayerFilds[id].home.filter(([x, y]) => this.state.filds[y][x] === id).length
-  }
-
-  private renderPlayers() {
-    return <aside ref={this.playersRef} className="players-panel panel" aria-labelledby="players-title">
-      <h2 id="players-title">{this.state.started ? t("Gracze") : t("Wybierz graczy")}</h2>
-      {!this.state.started && <p className="section-description">{t("2–4 graczy · na jednym ekranie")}</p>}
-      <div className="player-list">{[1, 2, 3, 4].map(id => {
-        const type = this.state.playerList[id]
-        const active = this.state.started && !this.state.winner && this.state.token === id
-        return <PlayerCard key={id} id={id} type={type} started={this.state.started} active={active}
-          finished={this.finishedCount(id)} progress={this.complateProcentT(id)} onSelect={type => this.setPlayerType(id, type)}/>
-      })}</div>
-    </aside>
+  private setPawnSymbols(showPawnSymbols: boolean) {
+    try { localStorage.setItem('chinczyk-pawn-symbols', String(showPawnSymbols)) } catch { /* Keep the preference for this visit. */ }
+    this.setState({ showPawnSymbols })
   }
 
   public render() {
@@ -537,26 +529,35 @@ export default class Game extends React.Component<{}, IGameState> {
     const human = this.isHumanTurn()
     const actions = this.posibleActions()
     const canMove = human && !awaitingRoll
+    const renderSquare = (x: number, y: number) => {
+      const movable = canMove && actions.some(action => action[0] === x && action[1] === y)
+      return <Square key={`${y}-${x}`} x={x} y={y} color={Filds[y][x]} activeColor={state.filds[y][x]}
+        disabled={!movable} movable={movable} onClick={() => { if (movable) this.onClick(y, x) }} />
+    }
     const playerCount = state.players.filter(Boolean).length
     const profile = PlayerProfiles[state.playerList[token]]
     const hasComputer = state.playerList.some(type => type !== undefined && type !== PlayerType.None && type !== PlayerType.Human)
     const statusTitle = winner ? t("{color} wygrywają!", { color: t(ColorNames[winner]) }) : !started ? t("Gotowi do gry?") : paused ? t("Gra wstrzymana") : human ? (awaitingRoll ? t("Twój ruch") : actions.length ? t("Wybierz swój pionek") : t("Tym razem bez ruchu")) : t("{name} wykonuje ruch…", { name: t(profile.name).split(" · ")[0] })
-    return <div className={`app-shell ${started ? 'is-playing' : 'is-setup'}`}>
+    return <PawnSymbolsContext.Provider value={state.showPawnSymbols}><div className={`app-shell ${started ? 'is-playing' : 'is-setup'}`}>
       <main>
         <div className="game-layout">
-          {this.renderPlayers()}
           <section className="board-panel panel" aria-label={t("Plansza do gry w chińczyka")}>
             <div className="board-heading"><div className="board-label"><span className={`status-dot ${started && !paused && !winner ? 'live' : ''}`}/>{winner ? t("Koniec partii") : !started ? t("Twój stół do gry") : paused ? t("Gra wstrzymana") : t("Partia w toku")}</div><h1 className="board-title">{t("chińczyk")}<span>.</span></h1><span className="round-label">{started ? t("Ruch {count}", { count: state.movesCount + 1 }) : t("Zaczynają {color}", { color: t(ColorNames[state.players.find(Boolean)?.id || 1]).toLowerCase() })}</span></div>
             <div className="board-wrap"><div className="game-board" ref={this.boardRef}>
-              {[3, 4, 2, 1].map(id => <div key={id} aria-hidden="true" className={`base-zone base-${id} color-${Colors[id]}`}><span><PlayerSymbol player={id}/>{t(ColorNames[id])}</span><small>{t("BAZA")}</small></div>)}
+              {[3, 4, 2, 1].map(id => <PlayerBase key={id} id={id} type={state.playerList[id]} started={started}
+                active={started && !winner && token === id} onSelect={type => this.setPlayerType(id, type)}/>)}
               {Array.from({ length: 11 }, (_, y) => Array.from({ length: 11 }, (_, x) => {
                 const color = Filds[y][x]
-                const movable = canMove && actions.some(action => action[0] === x && action[1] === y)
-                return <Square key={`${y}-${x}`} x={x} y={y} color={color} activeColor={state.filds[y][x]}
-                  disabled={!movable} movable={movable} onClick={() => { if (movable) this.onClick(y, x) }} />
+                // Base slots keep their game coordinates but sit inside the bases visually.
+                const inBase = color && PlayerFilds[color].start.some(([sx, sy]) => sx === x && sy === y)
+                return inBase ? <span key={`${y}-${x}`} className="square-void" aria-hidden="true"/> : renderSquare(x, y)
               }))}
+              {[3, 4, 2, 1].map(id => <div key={`pawns-${id}`} className={`base-pawns base-pawns-${id}`}>
+                {PlayerFilds[id].start.map(([x, y]) => renderSquare(x, y))}
+              </div>)}
               <div className="board-center" aria-hidden="true">✦</div>
             </div></div>
+            {!started && <p className="board-setup-hint">{t("Kliknij bazę, aby wybrać gracza.")} <span>{t("2–4 graczy · na jednym ekranie")}</span></p>}
           </section>
           <aside className="turn-panel">
             <section className={`turn-card panel ${started ? 'color-' + Colors[winner || token] : ''}`} aria-labelledby="turn-title">
@@ -570,18 +571,22 @@ export default class Game extends React.Component<{}, IGameState> {
               {!started ? <><button className="button primary" disabled={playerCount < 2} onClick={() => this.startGame()}>{t("Zagrajmy")}{" "}<span aria-hidden="true">↗</span></button>{playerCount < 2 && <p className="validation-note" role="status">{t("Wybierz co najmniej dwóch graczy.")}</p>}</> : winner ? <button className="button primary" onClick={() => this.newGame()}>{t("Zagraj jeszcze raz")}{" "}<span aria-hidden="true">↻</span></button> : paused ? <button className="button primary" onClick={() => this.startGame()}>{t("Wznów grę")}{" "}<span aria-hidden="true">▶</span></button> : human ? (awaitingRoll ? <button className="button primary" onClick={() => this.rollDice()}>{t("Rzuć kostką")} <span aria-hidden="true">⚄</span></button> : actions.length ? <p className="move-hint" role="status">{t("Kliknij podświetlony pionek.")}</p> : <button className="button primary" onClick={() => this.noMoves()}>{t("Przekaż kolejkę")} <span aria-hidden="true">→</span></button>) : <div className="thinking" role="status"><span/> {" "}{t("Przeciwnik gra")}</div>}
               {started && !winner && <div className="game-controls">{!paused && <button onClick={() => this.pauseGame()}>{t("Ⅱ Pauza")}</button>}<button onClick={() => this.newGame()}>{t("↻ Nowa partia")}</button></div>}
             </section>
-            {hasComputer && <details className="settings panel"><summary>{t("Ustawienia")}</summary>
-              <div className="pace-card"><div><label htmlFor="playerDelay">{t("Tempo gry")}</label><span>{state.time < 350 ? t("Szybkie") : state.time > 1000 ? t("Spokojne") : t("Swobodne")}</span></div><input type="range" id="playerDelay" min="150" max="1500" step="50" value={state.time} onChange={event => this.setState({ time: Number(event.target.value) })}/><p>{t("Ustaw, jak szybko grają przeciwnicy.")}</p></div>
-            </details>}
+            <RulesHelp onOpen={() => { if (started && !paused && !winner) this.pauseGame() }}/>
+            <details className="settings panel"><summary>{t("Ustawienia")}</summary>
+              {hasComputer && <div className="pace-card"><div><label htmlFor="playerDelay">{t("Tempo gry")}</label><span>{state.time < 350 ? t("Szybkie") : state.time > 1000 ? t("Spokojne") : t("Swobodne")}</span></div><input type="range" id="playerDelay" min="150" max="1500" step="50" value={state.time} onChange={event => this.setState({ time: Number(event.target.value) })}/><p>{t("Ustaw, jak szybko grają przeciwnicy.")}</p></div>}
+              <div className="settings-content">
+                <LanguageSwitch />
+                <label className="setting-row" htmlFor="pawnSymbols"><span>{t('Symbole pionków i pól')}</span>
+                  <input id="pawnSymbols" className="setting-switch" type="checkbox" role="switch" checked={state.showPawnSymbols}
+                    onChange={event => this.setPawnSymbols(event.target.checked)}/>
+                </label>
+                <a className="setting-row source-link" href="https://github.com/adam-zielonka/chinczyk">{t("Kod źródłowy")}<span aria-hidden="true">↗</span></a>
+              </div>
+            </details>
           </aside>
         </div>
       </main>
-      <footer>
-        <RulesHelp onOpen={() => { if (started && !paused && !winner) this.pauseGame() }}/>
-        <LanguageSwitch />
-        <a className="source-link" href="https://github.com/adam-zielonka/chinczyk">{t("Kod źródłowy")}</a>
-      </footer>
-    </div>
+    </div></PawnSymbolsContext.Provider>
   }
 
   private diceDots(value: number) {
